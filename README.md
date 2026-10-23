@@ -147,7 +147,8 @@ flowchart LR
 ```text
 expo-ticket-trace/
 ├── README.md                     # 本文件
-├── LICENSE                       # MIT
+├── LICENSE                       # MIT（纯许可证文本，便于 GitHub 识别）
+├── NOTICE                        # 数据为合成样本的声明
 ├── .gitignore
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -178,6 +179,8 @@ expo-ticket-trace/
 
 > 目录对应需求方给的模板（`my-tool/` → `expo-ticket-trace/`、`my_tool/` → `expo_trace/`），
 > 并补充了 `pyproject.toml` 与追溯/手册文档。
+>
+> 仓库根目录另有一个与本工具无关的历史文件 `报销助手_f24011321.zip`（仓库原有内容，保留未删）。
 
 ---
 
