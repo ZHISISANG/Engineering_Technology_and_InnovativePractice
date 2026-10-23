@@ -5,6 +5,11 @@
 
 ## [Unreleased]
 
+### 修复
+
+- `status` 命令把分派结果误当计数读，始终显示 0：改为按 16 张工单的分派结果汇总。
+- Windows 非 UTF-8 控制台（如 CI 的 cp1252 runner）下中文输出崩溃：CLI 与示例启动时把 stdout/stderr 切到 UTF-8，CI 同时设置 `PYTHONUTF8=1`。
+
 ### 变更
 
 - LICENSE 恢复为纯 MIT 文本，数据为合成样本的声明移至 `NOTICE`（便于 GitHub 识别许可证）。

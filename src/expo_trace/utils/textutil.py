@@ -4,8 +4,26 @@ from __future__ import annotations
 
 import hashlib
 import re
+import sys
 import unicodedata
 from pathlib import Path
+
+def ensure_utf8_stdio() -> None:
+    """把 stdout/stderr 切到 UTF-8，避免非 UTF-8 控制台下中文输出崩溃。
+
+    GitHub Actions 的 windows runner 默认代码页是 cp1252；CI 里也设了
+    PYTHONUTF8=1，这里再兜一层，保证用户本机直接运行时同样不炸。
+    """
+
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
 
 _PHONE = re.compile(r"(?<!\d)(1[3-9]\d)(\d{4})(\d{4})(?!\d)")
 _EMAIL = re.compile(r"([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})")

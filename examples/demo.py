@@ -23,6 +23,7 @@ from expo_trace.core.feedback import submit_feedback  # noqa: E402
 from expo_trace.core.pipeline import execute  # noqa: E402
 from expo_trace.core.review import submit_review  # noqa: E402
 from expo_trace.utils.errors import BlockedAction, ReviewRejected  # noqa: E402
+from expo_trace.utils.textutil import ensure_utf8_stdio  # noqa: E402
 from expo_trace.utils.timeutil import LOCAL_TZ  # noqa: E402
 
 EXPORT = ROOT / "data" / "demo" / "export"
@@ -39,6 +40,7 @@ def line(title: str) -> None:
 
 
 def main() -> int:
+    ensure_utf8_stdio()
     # 每次从干净目录开始：确认记录是追加写的，重复跑同一时间的脚本会被去重逻辑拒绝。
     if RUN_DIR.exists():
         shutil.rmtree(RUN_DIR)

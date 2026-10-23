@@ -71,6 +71,10 @@ class CliTest(unittest.TestCase):
         self.assertIn("人工队列：9", proc.stdout)
         self.assertTrue((Path(self.run_dir) / "output" / "report.md").exists())
 
+        status = cli("status", "--run-dir", self.run_dir)
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertIn("分派：可出草稿 5 / 人工 9 / 阻塞 2", status.stdout)
+
     def test_run_json_mode(self) -> None:
         proc = self._run("--json")
         self.assertEqual(proc.returncode, 0, proc.stderr)

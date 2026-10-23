@@ -32,6 +32,7 @@ from expo_trace.utils.errors import (
     TraceError,
 )
 from expo_trace.utils.jsons import dumps, jsonable
+from expo_trace.utils.textutil import ensure_utf8_stdio
 from expo_trace.utils.timeutil import parse_time
 
 DEFAULT_EXPORT = "data/demo/export"
@@ -144,12 +145,16 @@ def cmd_status(args: argparse.Namespace) -> int:
         print(f"降级：是 —— {data.get('degraded_reason')}（快照 {data.get('snapshot_at')}）")
     counts = data.get("counts", {})
     print(f"工单 {counts.get('tickets', 0)} · 版本 {counts.get('versions', 0)} · 问题 {counts.get('issues', 0)} · 队列 {counts.get('queue', 0)}")
-    dispositions = data.get("dispositions", {})
+    dispositions = data.get("dispositions", {}) or {}
+    tally = {"draft_ready": 0, "human_review": 0, "blocked": 0}
+    for value in dispositions.values():
+        key = value.value if isinstance(value, Disposition) else str(value)
+        tally[key] = tally.get(key, 0) + 1
     print(
         "分派：可出草稿 {draft_ready} / 人工 {human_review} / 阻塞 {blocked}".format(
-            draft_ready=dispositions.get("draft_ready", 0),
-            human_review=dispositions.get("human_review", 0),
-            blocked=dispositions.get("blocked", 0),
+            draft_ready=tally["draft_ready"],
+            human_review=tally["human_review"],
+            blocked=tally["blocked"],
         )
     )
     print(f"确认记录：{data.get('reviews', 0)}  当前暂停：{'是' if data.get('paused_now') else '否'}")
@@ -393,6 +398,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    ensure_utf8_stdio()
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
