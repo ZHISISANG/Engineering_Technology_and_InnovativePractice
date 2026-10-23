@@ -1,0 +1,9 @@
+# 发布前把 OWNER 换成实际 GitHub 账号或组织名
+blank_issues_enabled: false
+contact_links:
+  - name: 试点运行手册
+    url: https://github.com/OWNER/expo-ticket-trace/blob/main/docs/pilot-runbook.md
+    about: 边界、四周计划、暂停流程与验收清单
+  - name: 需求追溯矩阵
+    url: https://github.com/OWNER/expo-ticket-trace/blob/main/docs/requirements-traceability.md
+    about: 六条需求分别落在哪个模块、哪项测试、还缺什么业务验证

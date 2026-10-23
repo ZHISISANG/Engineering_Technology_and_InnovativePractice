@@ -1,0 +1,10 @@
+# 运行时依赖：无。
+# 本工具刻意只使用 Python 标准库（>=3.11），以缩小只读审计工具的供应链与权限面。
+# 因此 `pip install -r requirements.txt` 不会安装任何包，也不会访问网络。
+#
+# 测试使用标准库 unittest：
+#   python -m unittest discover -s tests -t .
+#
+# 以下为可选的开发工具，仅在需要 lint / 用 pytest 跑同一批测试时手动安装：
+# pytest>=8.0
+# ruff>=0.5

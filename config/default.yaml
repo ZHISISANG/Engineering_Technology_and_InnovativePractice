@@ -1,0 +1,145 @@
+# =============================================================================
+# expo-ticket-trace 默认配置（非机密，可提交到仓库）
+#
+# 说明：
+# - 这是“只读试点”的默认值，不是生产参数。改动请同步 CHANGELOG，并在 PR 中说明原因。
+# - 本地覆盖请放到 config/*.local.yaml（已在 .gitignore 中排除），用 --config 指定。
+# - 本文件使用内联 YAML 子集；不要使用锚点、多行字符串、Tab 缩进。
+# =============================================================================
+
+# 记录到审计日志中的操作者角色名；命令行 --actor 可覆盖。
+actor: 演练操作员
+
+pilot:
+  name: 展商咨询工单版本可追溯只读试点
+  batch: 2026-S1
+  weeks: 4
+  staff: 2
+  weekly_hours_cap: 4
+  mode: read_only
+
+# ---- 不可逆动作边界：任何一项被改成 true，程序拒绝启动 ----
+safety:
+  read_only: true
+  draft_only: true
+  auto_publish: false
+  write_back: false
+  external_message: false
+  watermark: 【未确认 · 不可对外】
+  # 命中这些类别/关键词的问答，草稿一律标记“禁止直接对外”，转授权人复核。
+  irreversible_categories: [fee, qualification]
+  irreversible_keywords: [收费, 费用, 报价, 折扣, 退款, 参展资格, 资格认定, 押金]
+  # 只有这些角色可以确认收费/资格类草稿。
+  irreversible_reviewers: [顾明岚, 傅景]
+
+quality:
+  # 回填时间与业务发生时间相差超过该小时数，标记为“回填样本”，不参与耗时统计口径。
+  backfill_hours: 8
+  # 演练验收抽样量（f42/f02；正式试点是否沿用需审批，见 docs/pilot-runbook.md）。
+  sample_size: 80
+  required_fields: [ticket_id, batch, category, occurred_at, received_at, assignee]
+  required_version_fields: [version_id, batch, category, effective_from, confirmed]
+  # 关键字段缺失与“未确认”必须分开记录，不能合并成空值。
+  unconfirmed_tokens: [未确认, 待确认, 待核实, unknown, tbd, n/a, na, ?]
+
+routing:
+  # 人工队列默认时限；到期未确认必须保留在队列，不得默认通过。
+  sla_hours: 24
+  # 这些代码一旦出现，工单必须进人工队列（不能默认通过）。
+  blocking_codes:
+    - AUTHORIZATION_UNCLEAR
+    - TIME_MISSING
+    - TIME_UNCONFIRMED
+    - TIME_INVALID
+    - NO_CURRENT_VERSION
+    - VERSION_CONFLICT
+    - VERSION_CHAIN_BREAK
+    - VERSION_DRIFT
+    - DUPLICATE_ID
+    - KEY_FIELD_MISSING
+    - KEY_FIELD_UNCONFIRMED
+    - HANDOFF_NOTE_ONLY
+    - UNCONFIRMED_ASSIGNED_TO_COUNTERPARTY
+  owners:
+    NO_CURRENT_VERSION: 项目流程协调员
+    VERSION_CONFLICT: 审核与质量负责人
+    VERSION_CHAIN_BREAK: 数字化工程师
+    VERSION_DUPLICATE: 数字化工程师
+    KEY_FIELD_MISSING: 一线服务专员
+    KEY_FIELD_UNCONFIRMED: 审核与质量负责人
+    SOURCE_INCOMPLETE: 数字化工程师
+    FIELD_UNMAPPED: 数字化工程师
+    AUTHORIZATION_UNCLEAR: 审核与质量负责人
+    FEE_OR_QUALIFICATION: 业务负责人
+    VERSION_DRIFT: 项目流程协调员
+    HANDOFF_NOTE_ONLY: 项目流程协调员
+    HANDOFF_MISSING: 项目流程协调员
+    DUPLICATE_ID: 项目流程协调员
+    TIME_MISSING: 一线服务专员
+    TIME_UNCONFIRMED: 一线服务专员
+    TIME_INVALID: 一线服务专员
+    UNCONFIRMED_ASSIGNED_TO_COUNTERPARTY: 审核与质量负责人
+    BACKFILLED_TIME: 一线服务专员
+    UNIT_DIFFERENCE: 一线服务专员
+    REVIEW_RETURNED: 一线服务专员
+    PILOT_PAUSED: 审核与质量负责人
+
+review:
+  # 可执行人工确认的角色名（对应访谈角色，不是系统账号）。
+  reviewers: [顾明岚, 傅景, 叶书, 唐映秋]
+  # 可暂停/继续试点的角色；审核方保留随时暂停权（f04）。
+  pause_roles: [傅景, 顾明岚]
+  # 确认一条草稿前必须逐项确认的清单。
+  required_confirmations: [版本可定位, 来源可追溯, 未确认项已列明, 用途与授权范围相符]
+
+audit:
+  # 审计日志只追加；哈希链断点必须在报告中标红。
+  hash_alg: sha256
+  include_query_events: true
+
+report:
+  title: 展商咨询工单只读试点周报
+  # 固定并列三项指标，禁止用单一工时解释效果（f51）。
+  metrics: [handling_minutes, rework_count, confirmation_completeness]
+
+# ---- 字段别名：三类工具（服务台/台账/文件库）字段名不一致时的映射 ----
+mapping:
+  tickets:
+    ticket_id: [ticket_id, 工单编号, 咨询演练编号]
+    batch: [batch, 展会批次]
+    category: [category, 问题类别]
+    question: [question, 问题描述]
+    occurred_at: [business_occurred_at, 业务发生时间, 发生时间]
+    received_at: [system_received_at, 系统接收时间, 回填时间]
+    assignee: [assignee, 处理人, 负责人]
+    contact: [contact, 联系方式]
+  versions:
+    version_id: [version_id, 版本编号]
+    notice_id: [notice_id, 通知编号]
+    batch: [batch, 展会批次]
+    category: [category, 问题类别]
+    effective_from: [effective_from, 生效起始, 规则生效日期]
+    effective_to: [effective_to, 生效截止]
+    confirmed: [confirmed, 已确认, 确认状态]
+    confirmed_by: [confirmed_by, 确认人]
+    confirmed_at: [confirmed_at, 确认时间]
+    void: [void, 已作废, 作废]
+    void_reason: [void_reason, 作废原因]
+    supersedes: [supersedes, 替代版本]
+    file_name: [file_name, 文件名]
+    statement: [statement, 规则摘要, 标准答复]
+    received_at: [received_at, 接收时间]
+  ledger:
+    ticket_id: [ticket_id, 工单编号]
+    handling: [handling, 处理时长, 工时]
+    unit: [unit, 单位]
+    deadline: [deadline, 截止时间]
+    status: [status, 状态]
+  handoff:
+    ticket_id: [ticket_id, 工单编号]
+    from_role: [from_role, 交出方]
+    to_role: [to_role, 接收方]
+    latest_version: [latest_version, 最新版本]
+    unconfirmed_items: [unconfirmed_items, 尚未确认事项]
+    due_at: [due_at, 截止时间]
+    note: [note, 交接备注]

@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: 安装（无运行时依赖）
+        run: python -m pip install -e .
+
+      - name: 单元测试
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: 示例端到端
+        run: python examples/demo.py
+
+      - name: CLI 严格模式（演示数据应 6/6 通过）
+        run: |
+          python -m expo_trace run --export data/demo/export --run-dir .ci-run --now "2026-10-20 10:00" --strict
+          python -m expo_trace audit verify --run-dir .ci-run
+
+      - name: 只读边界自检
+        shell: bash
+        run: |
+          if grep -REn 'import (requests|httpx|smtplib|imaplib|paramiko|boto3)' src/; then
+            echo "::error::发现网络/邮件依赖，违反只读边界"
+            exit 1
+          fi
+          python - <<'PY'
+          from expo_trace.core import drafting
+          from expo_trace.utils.errors import BlockedAction
+          for name in ("publish", "send_external", "write_back"):
+              try:
+                  getattr(drafting, name)()
+              except BlockedAction:
+                  continue
+              raise SystemExit(f"{name} 没有拒绝")
+          print("对外动作全部被拒绝")
+          PY
+
+  build:
+    name: build wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build
+      - run: python -m build
+      - run: ls -l dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/

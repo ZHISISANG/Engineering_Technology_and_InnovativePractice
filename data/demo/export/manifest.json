@@ -1,0 +1,15 @@
+{
+  "case": "展商咨询知识与服务转派",
+  "batch": "2026-S1",
+  "exported_at": "2026-10-20T09:00:00+08:00",
+  "mode": "read_only_desensitized",
+  "read_only": true,
+  "desensitized": true,
+  "source_systems": ["内部服务台", "业务台账", "文件库"],
+  "authorized_scope": {
+    "batches": ["2026-S1"],
+    "purpose": "只读试点验收与人工复核",
+    "expires_at": "2026-11-30"
+  },
+  "notes": "合成演练样本；不含真实个人信息；不得用于对外答复"
+}

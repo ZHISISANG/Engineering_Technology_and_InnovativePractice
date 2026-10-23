@@ -1,0 +1,43 @@
+# ---- 运行产物（每次试点运行都会重建，不入库）----
+runs/
+state/
+*.trace-run/
+snapshots/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# ---- 密钥与本地覆盖 ----
+.env
+.env.*
+config/*.local.yaml
+!config/default.yaml
+*.pem
+*.key
+
+# ---- 编辑器 / 系统 ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# 测试临时目录 / 示例产物 / 本地冒烟
+.tmp/
+examples/.demo-run/
+.deploy-smoke/
+.verify-run/
