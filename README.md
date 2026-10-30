@@ -124,27 +124,27 @@ flowchart LR
 
 ## 设计方案（v1）
 
-[`v1设计方案/`](v1设计方案/README.md) 是面向业务与采购的一套完整交付：业务挖掘报告、行业分析、两张流程图（现状 / 数智化转型后）、总体架构图、报价单与设计方案。文档中的案例、人物和数字均为合成样本，行业统计仅引用可核查的公开来源。
+[`docs/solution-v1/`](docs/solution-v1/README.md) 是面向业务与采购的一套完整交付：业务挖掘报告、行业分析、两张流程图（现状 / 数智化转型后）、总体架构图、报价单与设计方案。文档中的案例、人物和数字均为合成样本，行业统计仅引用可核查的公开来源。
 
 | 文件 | 内容 |
 | --- | --- |
-| [01-业务挖掘报告.docx](v1设计方案/01-业务挖掘报告.docx) | 36 条访谈事实、六角色权责、八环节断点、六条需求假设与证据缺口 |
-| [02-行业分析.docx](v1设计方案/02-行业分析.docx) | 会展行业边界、数字化成熟度、技术趋势、合规约束与对本方案的启示 |
-| [03-流程图说明.docx](v1设计方案/03-流程图说明.docx) | 现状流程图、数智化转型后流程图、总体架构图与逐图说明 |
-| [04-报价单.xlsx](v1设计方案/04-报价单.xlsx) | 7 项交付、26 人天工作分解、税率与付款节奏、假设与不含项 |
-| [05-设计方案.docx](v1设计方案/05-设计方案.docx) | 目标、架构、数据与功能设计、安全、实施计划、验收与风险 |
-| [03-图表/](v1设计方案/03-图表) | 三张 1700px 宽的 PNG 原图，可直接插入汇报材料 |
+| [01-业务挖掘报告.docx](docs/solution-v1/01-业务挖掘报告.docx) | 36 条访谈事实、六角色权责、八环节断点、六条需求假设与证据缺口 |
+| [02-行业分析.docx](docs/solution-v1/02-行业分析.docx) | 会展行业边界、数字化成熟度、技术趋势、合规约束与对本方案的启示 |
+| [03-流程图说明.docx](docs/solution-v1/03-流程图说明.docx) | 现状流程图、数智化转型后流程图、总体架构图与逐图说明 |
+| [04-报价单.xlsx](docs/solution-v1/04-报价单.xlsx) | 7 项交付、26 人天工作分解、税率与付款节奏、假设与不含项 |
+| [05-设计方案.docx](docs/solution-v1/05-设计方案.docx) | 目标、架构、数据与功能设计、安全、实施计划、验收与风险 |
+| [03-图表/](docs/solution-v1/03-图表) | 三张 1700px 宽的 PNG 原图，可直接插入汇报材料 |
 
 ---
 
 ## 架构方案（v2）：报销助手智能体
 
-[`v2-报销助手架构方案/`](v2-报销助手架构方案/README.md) 是另一份独立的架构选型文档，主题是**报销助手智能体系统**（FastAPI 异步后端、LLM 经 API 接入且可替换、制度文档向量化检索、员工/管理员两角色），与本仓库的展商工单工具没有代码依赖。
+[`docs/architecture-v2/`](docs/architecture-v2/README.md) 是另一份独立的架构选型文档，主题是**报销助手智能体系统**（FastAPI 异步后端、LLM 经 API 接入且可替换、制度文档向量化检索、员工/管理员两角色），与本仓库的展商工单工具没有代码依赖。
 
 | 文件 | 内容 |
 | --- | --- |
-| [01-架构选型方案.docx](v2-报销助手架构方案/01-架构选型方案.docx) | 四层架构、目录 tree、5 张核心表 + 5 张支撑表、第一周 MVP、选型对比与风险 |
-| [02-图表/四层架构图.png](v2-报销助手架构方案/02-图表/四层架构图.png) | 1700×1320 PNG：入口层 / 服务层 / 智能体编排层 / 数据模型层 + 请求路径与两条红线 |
+| [01-架构选型方案.docx](docs/architecture-v2/01-架构选型方案.docx) | 四层架构、目录 tree、5 张核心表 + 5 张支撑表、第一周 MVP、选型对比与风险 |
+| [02-图表/四层架构图.png](docs/architecture-v2/02-图表/四层架构图.png) | 1700×1320 PNG：入口层 / 服务层 / 智能体编排层 / 数据模型层 + 请求路径与两条红线 |
 
 核心取舍：**判定与生成分离**（版本与适用性用 SQL/规则判定）、**先过滤再相似**（`status=active` + 生效区间先过滤，再向量召回）、**工具即权限边界**（注册表里没有提交报销单的工具）、**回答可回放**（引用、提示词版本、模型与用量随消息落库）。
 
@@ -152,17 +152,16 @@ flowchart LR
 
 ## 裸问答原型（v3）
 
-[`v3-裸问答原型/`](v3-裸问答原型/rag_qa.py) 是阶段 1 的单文件实现：读 `data/报销制度.md` → 结构感知切片（500 字 / 80 重叠）→ 向量化 → FAISS（可选）或 numpy 索引 → BM25 + 向量混合检索 top3 → 拼提示词 → 调用可配置的 LLM，回答带 `[编号]` 引用，没有依据时直接拒答。
+[`src/rag_qa.py`](src/rag_qa.py) 是阶段 1 的单文件实现：读 `data/policy/报销制度.md` → 结构感知切片（500 字 / 80 重叠）→ 向量化 → FAISS（可选）或 numpy 索引 → BM25 + 向量混合检索 top3 → 拼提示词 → 调用可配置的 LLM，回答带 `[编号]` 引用，没有依据时直接拒答。
 
 ```bash
 python -m pip install numpy
-cd v3-裸问答原型
-python rag_qa.py --selftest                    # 29 项离线自检
-python rag_qa.py -q "出差住宿标准是多少？"        # mock 模式，只看链路
-python rag_qa.py -q "发票丢了怎么办？" --provider deepseek
+python src/rag_qa.py --selftest                  # 29 项离线自检
+python src/rag_qa.py -q "出差住宿标准是多少？"      # mock 模式，只看链路
+python src/rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 ```
 
-`call_llm()` 走 OpenAI 兼容协议，`openai / deepseek / ollama / mock` 四选一；切片、嵌入、混合检索、提示词与拒答判据都标了 `[核心·阶段2复用]`，可直接搬进 FastAPI 服务。详细说明见 [v3-裸问答原型/README.md](v3-裸问答原型/README.md)。
+`call_llm()` 走 OpenAI 兼容协议，`openai / deepseek / ollama / mock` 四选一；切片、嵌入、混合检索、提示词与拒答判据都标了 `[核心·阶段2复用]`，可直接搬进 FastAPI 服务。详细说明见 [docs/rag-prototype.md](docs/rag-prototype.md)。
 ---
 
 ## 命令行
@@ -197,8 +196,10 @@ expo-ticket-trace/
 ├── SECURITY.md                   # 安全模型、已知风险、事件处置
 ├── requirements.txt              # 运行时零依赖；开发工具可选
 ├── pyproject.toml                # 打包与 expo-trace 入口
-├── src/expo_trace/
-│   ├── __init__.py
+├── src/
+│   ├── expo_trace/               # 展商工单工具（包）
+│   ├── rag_qa.py                 # 报销制度裸问答原型（单文件，可直接运行）
+│   └── expo_trace/__init__.py
 │   ├── main.py                   # CLI 入口
 │   ├── core/                     # ingest / versioning / validation /
 │   │                             # routing / drafting / review /
@@ -210,20 +211,36 @@ expo-ticket-trace/
 │   ├── flowchart.md              # 5 张 Mermaid 流程图
 │   ├── flowchart.html            # 离线可视化版本
 │   ├── pilot-runbook.md          # 四周试点手册（2 人 / 每周 ≤4h）
-│   └── requirements-traceability.md
-├── v1设计方案/                   # 业务挖掘、行业分析、流程图、报价单、设计方案
-├── v2-报销助手架构方案/           # 另一主题：报销助手智能体四层架构选型
-├── v3-裸问答原型/                 # 单文件 RAG 原型（切片 / 混合检索 / 可配置 LLM）
+│   ├── requirements-traceability.md
+│   ├── rag-prototype.md          # v3 原型说明（原 v3-裸问答原型/README.md）
+│   ├── solution-v1/              # v1 交付：业务挖掘 / 行业分析 / 流程图 / 报价单 / 方案
+│   └── architecture-v2/          # v2 交付：报销助手四层架构选型
 ├── tests/                        # 103 项 unittest，与 core 模块对应
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh
 ├── config/default.yaml           # 非机密默认配置
-├── data/demo/export/             # 12 个坑的合成样本
+├── data/
+│   ├── demo/export/              # 12 个坑的合成样本
+│   └── policy/报销制度.md         # v3 原型的合成制度原文
 └── .github/                      # CI、Issue 模板、PR 模板
 ```
 
 > 目录对应需求方给的模板（`my-tool/` → `expo-ticket-trace/`、`my_tool/` → `expo_trace/`），
 > 并补充了 `pyproject.toml` 与追溯/手册文档。
+
+### 交付物放在哪（整合说明）
+
+三批文档与代码没有覆盖 `src/expo_trace/` 的任何核心文件，只按“代码进 `src/`、脚本/示例进 `examples/`、文档进 `docs/`、样例数据进 `data/`”归位：
+
+| 原位置 | 现位置 | 说明 |
+| --- | --- | --- |
+| `v1设计方案/` | `docs/solution-v1/` | 5 份 Word/Excel + 3 张 PNG，内部相对链接已随之生效 |
+| `v2-报销助手架构方案/` | `docs/architecture-v2/` | 架构选型 docx + 架构图 |
+| `v3-裸问答原型/rag_qa.py` | `src/rag_qa.py` | 单文件原型，默认路径改为仓库根下的 `data/policy/` 与 `.rag-index/` |
+| `v3-裸问答原型/data/报销制度.md` | `data/policy/报销制度.md` | 合成制度原文 |
+| `v3-裸问答原型/README.md` | `docs/rag-prototype.md` | 命令示例改为从仓库根运行 |
+
+被更新的既有文件只有 3 个：`README.md`（本章节与结构树）、`CHANGELOG.md`（路径与整合记录）、`.gitignore`（索引目录）。
 >
 > 仓库根目录另有一个与本工具无关的历史文件 `报销助手_f24011321.zip`（仓库原有内容，保留未删）。
 

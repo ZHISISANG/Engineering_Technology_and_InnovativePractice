@@ -43,5 +43,5 @@ examples/.demo-run/
 .verify-run/
 
 # v3 裸问答原型：本地向量索引
-v3-裸问答原型/.index/
-v3-裸问答原型/.selftest-index/
+.rag-index/
+.rag-selftest/

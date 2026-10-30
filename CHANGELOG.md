@@ -5,11 +5,16 @@
 
 ## [Unreleased]
 
+### 变更（目录整合）
+- 三批交付物归位到模板目录：`v1设计方案/` → `docs/solution-v1/`、`v2-报销助手架构方案/` → `docs/architecture-v2/`、`v3-裸问答原型/rag_qa.py` → `src/rag_qa.py`、制度原文 → `data/policy/报销制度.md`、v3 说明 → `docs/rag-prototype.md`。
+- `src/rag_qa.py` 默认路径改为仓库根：`data/policy/报销制度.md` 与 `.rag-index/`；索引目录改名并加入 `.gitignore`。
+- 更新 `README.md` 链接、结构树与“交付物放在哪”对照表；未改动 `src/expo_trace/` 任何文件。
+
 ### 新增
 
-- `v1设计方案/`：业务挖掘报告、行业分析、流程图说明（现状 / 数智化转型后 / 总体架构）、报价单与设计方案，共 6 份可交付文件与 3 张 PNG 原图；根 README 增加索引。
-- `v3-裸问答原型/`：单文件 RAG 原型（500 字切片、FAISS/numpy 索引、BM25+向量混合检索、可配置 LLM、拒答判据），含 29 项离线自检与使用说明；根 README 增加 v3 索引。
-- `v2-报销助手架构方案/`：报销助手智能体系统的四层架构选型（FastAPI、LLM 可替换、制度向量检索、两角色），含 30 张表的 Word 方案与 1700×1320 架构图；根 README 增加 v2 索引。
+- `docs/solution-v1/`：业务挖掘报告、行业分析、流程图说明（现状 / 数智化转型后 / 总体架构）、报价单与设计方案，共 6 份可交付文件与 3 张 PNG 原图；根 README 增加索引。
+- `src/rag_qa.py`（说明见 `docs/rag-prototype.md`）：单文件 RAG 原型（500 字切片、FAISS/numpy 索引、BM25+向量混合检索、可配置 LLM、拒答判据），含 29 项离线自检与使用说明；根 README 增加 v3 索引。
+- `docs/architecture-v2/`：报销助手智能体系统的四层架构选型（FastAPI、LLM 可替换、制度向量检索、两角色），含 30 张表的 Word 方案与 1700×1320 架构图；根 README 增加 v2 索引。
 
 ### 修复
 
