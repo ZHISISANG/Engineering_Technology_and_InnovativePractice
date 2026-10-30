@@ -20,8 +20,8 @@ PYTHONPATH=src python -m expo_trace ...
 | 码 | 含义 |
 | --- | --- |
 | `0` | 成功（`--strict` 下表示工具侧验收无 FAIL） |
-| `2` | 输入/配置错误（`InputError` / `ConfigError` / `TraceError`） |
-| `3` | 试点已暂停（`PausedError`），不生成草稿 |
+| `2` | 输入/配置错误（`InputError` / `ConfigError` / `TraceError`），以及运行目录不可用等文件系统错误（`OSError`） |
+| `3` | 试点已暂停（`PausedError`），不生成新草稿；`run` 与 `report` 都返回该码 |
 | `4` | 人工确认被拒绝（`ReviewRejected`），或 `--strict` 下验收失败 |
 | `5` | 越界动作被阻止（`BlockedAction`） |
 
@@ -66,7 +66,7 @@ expo-trace run \
 expo-trace status --run-dir runs/demo [--json]
 ```
 
-输出运行时间、工单/草稿/队列计数、确认记录数、是否暂停、报告是否存在。
+输出运行时间、工单/版本/问题计数、队列长度（含阻塞项）、三态分派结果（可出草稿 / 人工 / 阻塞）、确认记录数、是否暂停、报告是否存在。
 
 ### 2.3 `review` —— 提交人工确认或退回
 
@@ -134,7 +134,7 @@ expo-trace resume --run-dir runs/demo --actor 傅景
 expo-trace report --run-dir runs/demo [--now "..."] [--json]
 ```
 
-从运行目录内的输入副本与配置副本重新计算，更新 `output/report.md` 等产物；不修改原始导出。
+从运行目录内的输入副本与配置副本重新计算，更新 `output/report.md` 等产物；不修改原始导出。试点处于暂停状态时同样返回 `3`，并提示草稿不得对外使用。
 
 ### 2.7 `audit` —— 审计链
 
@@ -154,7 +154,7 @@ expo-trace audit show   --run-dir runs/demo --json
 expo-trace sample --run-dir runs/demo --size 80 [--json]
 ```
 
-按问题类别轮转抽样，结果可复现；实际数量超过工单数时只返回全部工单。
+按问题类别轮转抽样，结果可复现；实际数量超过工单数时只返回全部工单。`--size` 必须为正整数，否则返回 `2`。
 正式抽查量是否沿用 80 条需审批（f42）。
 
 ---
@@ -295,9 +295,9 @@ runs/demo/
 | --- | --- |
 | `dispositions` | 各状态计数 |
 | `drafts` / `watermarked` / `blocked_irreversible` | 草稿与水印覆盖、边界阻塞数 |
-| `handling` | `total_minutes` / `clean_total_minutes` / `samples` / `coverage` / `median_minutes` / `backfilled_excluded` |
+| `handling` | `total_minutes` / `clean_total_minutes` / `samples` / `coverage` / `median_minutes` / `backfilled_excluded`；分钟数保留一位小数，整数时回落为整数 |
 | `rework` | `returned` / `repeated_reviews` / `total` |
-| `confirmation` | `confirmed_reviews` / `covered_items` / `required_items` / `rate` |
+| `confirmation` | `confirmed_reviews`（确认记录数）/ `confirmed_tickets`（被确认工单数）/ `covered_items` / `required_items` / `rate`；同一工单多人确认时必确认项按并集去重 |
 | `queue_by_reason` | 原因 → 条数 |
 | `feedback` | `total` / `by_kind` / `items`（最近 5 条） |
 | `issues` | `errors` / `warnings` / `total` |

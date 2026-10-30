@@ -71,11 +71,23 @@ class RunResult:
     manifest_path: Path | None = None
 
 
-def _copy_export(store: RunStore, export_dir: Path) -> dict[str, str]:
+def _missing_export(export_dir: Path) -> list[str]:
     names = list(EXPORT_FILES) + [MANIFEST_FILE]
-    missing = [name for name in names if not (export_dir / name).is_file()]
+    if not export_dir.is_dir():
+        return names
+    return [name for name in names if not (export_dir / name).is_file()]
+
+
+def _require_export(export_dir: Path) -> None:
+    """先在源目录上把缺文件查出来，避免建了一半的运行目录留在磁盘上。"""
+    missing = _missing_export(export_dir)
     if missing:
         raise InputError(f"导出目录缺少文件：{'、'.join(missing)}（目录：{export_dir}）")
+
+
+def _copy_export(store: RunStore, export_dir: Path) -> dict[str, str]:
+    _require_export(export_dir)
+    names = list(EXPORT_FILES) + [MANIFEST_FILE]
     return store.copy_inputs({name: name for name in names}, export_dir)
 
 
@@ -182,6 +194,10 @@ def execute(
         config.data["actor"] = actor
     now = now or datetime.now().astimezone()
     run_path = Path(run_dir)
+    if run_path.exists() and not run_path.is_dir():
+        raise InputError(f"运行目录不可用：{run_path} 已存在且不是目录")
+    # 先校验导出目录，再动运行目录：输入有误时不该留下空壳目录
+    _require_export(export_path)
     store = RunStore(run_path)
     store.ensure()
     paused = store.is_paused()

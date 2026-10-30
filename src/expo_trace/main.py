@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -144,7 +145,10 @@ def cmd_status(args: argparse.Namespace) -> int:
     if data.get("degraded"):
         print(f"降级：是 —— {data.get('degraded_reason')}（快照 {data.get('snapshot_at')}）")
     counts = data.get("counts", {})
-    print(f"工单 {counts.get('tickets', 0)} · 版本 {counts.get('versions', 0)} · 问题 {counts.get('issues', 0)} · 队列 {counts.get('queue', 0)}")
+    print(
+        f"工单 {counts.get('tickets', 0)} · 版本 {counts.get('versions', 0)} · "
+        f"问题 {counts.get('issues', 0)} · 队列 {counts.get('queue', 0)}（含阻塞项）"
+    )
     dispositions = data.get("dispositions", {}) or {}
     tally = {"draft_ready": 0, "human_review": 0, "blocked": 0}
     for value in dispositions.values():
@@ -205,9 +209,10 @@ def cmd_pause(args: argparse.Namespace) -> int:
         raise ReviewRejected(
             f"{args.actor} 无权暂停试点；只有 {'、'.join(config.pause_roles())} 可以操作（f04）"
         )
-    store.pause(args.actor, args.reason, _now(args.now))
+    at = _now(args.now)
+    store.pause(args.actor, args.reason, at)
     AuditLog(store, actor=args.actor).append(
-        "pilot_paused", store.root.name, {"reason": args.reason}, at=_now(args.now)
+        "pilot_paused", store.root.name, {"reason": args.reason}, at=at
     )
     print(f"试点已暂停（操作人 {args.actor}）：{args.reason}")
     print("暂停期间不生成新草稿；已生成草稿不得对外使用。恢复请执行 resume。")
@@ -246,7 +251,21 @@ def cmd_report(args: argparse.Namespace) -> int:
     else:
         print(f"已重跑并更新：{result.report_path}")
         print("输入与配置均取自运行目录，结果可复现。")
+        if result.paused:
+            print("注意：试点处于暂停状态，草稿不得对外使用。")
+    if result.paused:
+        return PausedError.exit_code
     return 0
+
+
+def _display_width(text: str) -> int:
+    """终端里的显示宽度：中日韩全角字符按 2 列算，避免表格右移。"""
+    return sum(2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1 for ch in text)
+
+
+def _pad(text: str, width: int, align: str = "<") -> str:
+    gap = max(0, width - _display_width(text))
+    return (" " * gap + text) if align == ">" else (text + " " * gap)
 
 
 def cmd_audit(args: argparse.Namespace) -> int:
@@ -275,7 +294,10 @@ def cmd_audit(args: argparse.Namespace) -> int:
     if args.json:
         print(dumps(entries))
     else:
-        print(f"{'seq':>4}  {'时间':<20}  {'操作人':<10}  {'动作':<18}  对象/摘要")
+        print(
+            f"{_pad('seq', 4, '>'):>4}  {_pad('时间', 20)}  {_pad('操作人', 10)}  "
+            f"{_pad('动作', 18)}  对象/摘要"
+        )
         for entry in entries:
             details = entry.get("details", {})
             if entry.get("action") == "version_resolved":
@@ -286,8 +308,10 @@ def cmd_audit(args: argparse.Namespace) -> int:
             else:
                 summary = json.dumps(details, ensure_ascii=False, separators=(",", ":"))
             print(
-                f"{entry.get('seq', 0):>4}  {entry.get('at', '')[:19]:<20}  "
-                f"{str(entry.get('actor', ''))[:10]:<10}  {str(entry.get('action', ''))[:18]:<18}  "
+                f"{_pad(str(entry.get('seq', 0)), 4, '>'):>4}  "
+                f"{_pad(str(entry.get('at', ''))[:19], 20)}  "
+                f"{_pad(str(entry.get('actor', ''))[:10], 10)}  "
+                f"{_pad(str(entry.get('action', ''))[:18], 18)}  "
                 f"{entry.get('subject', '')} {summary[:110]}"
             )
     if args.ticket:
@@ -296,6 +320,8 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 def cmd_sample(args: argparse.Namespace) -> int:
+    if args.size <= 0:
+        raise InputError(f"--size 必须是正整数，当前为 {args.size}")
     store = RunStore(args.run_dir)
     rows = store.read_jsonl("output/tickets.jsonl")
     proxies = [
@@ -417,6 +443,11 @@ def main(argv: list[str] | None = None) -> int:
         return getattr(exc, "exit_code", 2)
     except FileNotFoundError as exc:
         print(f"错误：找不到文件 {exc.filename}", file=sys.stderr)
+        return 2
+    except OSError as exc:
+        # 例如 run 目录被一个同名文件占住、磁盘只读：给人看的错误，而不是栈。
+        detail = exc.strerror or str(exc)
+        print(f"错误：文件操作失败（{detail}）：{exc.filename or ''}".rstrip("："), file=sys.stderr)
         return 2
 
 

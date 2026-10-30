@@ -162,6 +162,21 @@ python src/rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 ```
 
 `call_llm()` 走 OpenAI 兼容协议，`openai / deepseek / ollama / mock` 四选一；切片、嵌入、混合检索、提示词与拒答判据都标了 `[核心·阶段2复用]`，可直接搬进 FastAPI 服务。详细说明见 [docs/rag-prototype.md](docs/rag-prototype.md)。
+
+---
+
+## 阶段 2 设计（待确认）
+
+三份提示词（员工聊天入口、管理后台、Agent 工具）原文对象是"报销助手"；[`docs/phase2/`](docs/phase2/README.md) 已把对象逐项替换为**展商咨询工单**，只出设计、未写代码：
+
+| 文档 | 内容 | 关键决定 |
+| --- | --- | --- |
+| [chat-api.md](docs/phase2/chat-api.md) | `POST /chat` SSE、SQLite 会话表、最近 6 轮、前端状态机 | 先定版本再检索；无引用不回答；收费/资格直接转人工 |
+| [admin-console.md](docs/phase2/admin-console.md) | 7 个页面、接口清单、JWT 角色矩阵、知识库与模板版本 | 职责分离：能改模板的不能暂停，能暂停的不能改模板 |
+| [agent-tools.md](docs/phase2/agent-tools.md) | 10 个 Function Calling 工具、调用顺序、`context_token` | 写操作必须有一次性 token；工具层拒绝跳步，不靠提示词自觉 |
+
+阶段 1 说"不做向量检索"、阶段 2 又做，顺序是反的：**版本判定是闸门，检索只在已确认版本的文本内取条款**，不参与版本效力判断。
+
 ---
 
 ## 命令行
@@ -198,13 +213,14 @@ expo-ticket-trace/
 ├── pyproject.toml                # 打包与 expo-trace 入口
 ├── src/
 │   ├── expo_trace/               # 展商工单工具（包）
-│   ├── rag_qa.py                 # 报销制度裸问答原型（单文件，可直接运行）
-│   └── expo_trace/__init__.py
-│   ├── main.py                   # CLI 入口
-│   ├── core/                     # ingest / versioning / validation /
-│   │                             # routing / drafting / review /
-│   │                             # metrics / acceptance / report / audit
-│   └── utils/                    # YAML 子集、时间四态、脱敏、哈希
+│   │   ├── __init__.py
+│   │   ├── __main__.py
+│   │   ├── main.py               # CLI 入口
+│   │   ├── core/                 # ingest / versioning / validation /
+│   │   │                         # routing / drafting / review /
+│   │   │                         # metrics / acceptance / report / audit
+│   │   └── utils/                # YAML 子集、时间四态、脱敏、哈希
+│   └── rag_qa.py                 # 报销制度裸问答原型（单文件，可直接运行）
 ├── docs/
 │   ├── design.md                 # 设计思路与取舍
 │   ├── api.md                    # CLI / Python API / 产物 schema
@@ -213,9 +229,10 @@ expo-ticket-trace/
 │   ├── pilot-runbook.md          # 四周试点手册（2 人 / 每周 ≤4h）
 │   ├── requirements-traceability.md
 │   ├── rag-prototype.md          # v3 原型说明（原 v3-裸问答原型/README.md）
+│   ├── phase2/                   # 阶段 2 设计：聊天接口 / 管理后台 / Agent 工具
 │   ├── solution-v1/              # v1 交付：业务挖掘 / 行业分析 / 流程图 / 报价单 / 方案
 │   └── architecture-v2/          # v2 交付：报销助手四层架构选型
-├── tests/                        # 103 项 unittest，与 core 模块对应
+├── tests/                        # 112 项 unittest，与 core 模块对应
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh
 ├── config/default.yaml           # 非机密默认配置
@@ -280,7 +297,7 @@ expo-ticket-trace/
 ## 开发
 
 ```bash
-python -m unittest discover -s tests -t .    # 103 项，零依赖
+python -m unittest discover -s tests -t .    # 112 项，零依赖
 python -m compileall -q src
 python examples/demo.py                       # 分步演示（含确认、暂停、快照兜底）
 ```

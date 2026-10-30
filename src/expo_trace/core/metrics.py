@@ -24,6 +24,13 @@ from expo_trace.core.models import (
 )
 from expo_trace.core.store import RunStore
 
+
+def _minutes(value: float) -> float | int:
+    """保留一位小数；整数值回落成 int，避免报告里出现 452.0。"""
+    rounded = round(float(value), 1)
+    return int(rounded) if float(rounded).is_integer() else rounded
+
+
 METRIC_LABELS = {
     "handling_minutes": "处理工时（分钟）",
     "rework_count": "返工次数",
@@ -69,14 +76,14 @@ def compute(
 
     with_handling = [t for t in tickets if t.handling_minutes is not None]
     clean_handling = [t for t in with_handling if not t.backfilled]
-    minutes = [int(t.handling_minutes or 0) for t in with_handling]
-    clean_minutes = [int(t.handling_minutes or 0) for t in clean_handling]
+    minutes = [float(t.handling_minutes or 0) for t in with_handling]
+    clean_minutes = [float(t.handling_minutes or 0) for t in clean_handling]
     handling = {
-        "total_minutes": sum(minutes),
-        "clean_total_minutes": sum(clean_minutes),
+        "total_minutes": _minutes(sum(minutes)),
+        "clean_total_minutes": _minutes(sum(clean_minutes)),
         "samples": len(with_handling),
         "coverage": round(len(with_handling) / total, 4) if total else 0.0,
-        "median_minutes": statistics.median(minutes) if minutes else None,
+        "median_minutes": _minutes(statistics.median(minutes)) if minutes else None,
         "backfilled_excluded": len(with_handling) - len(clean_handling),
     }
 
@@ -94,12 +101,22 @@ def compute(
 
     required = [str(x) for x in config.get("review.required_confirmations", [])]
     confirmations = [r for r in reviews if r.get("decision") == "confirm"]
-    covered = 0
+    # 同一工单被多人确认时，必确认项只算一次：按工单取并集，避免重复计数把完整率推过 100%。
+    ticket_ids = {t.ticket_id for t in tickets}
+    required_set = set(required)
+    covered_by_ticket: dict[str, set[str]] = {}
     for review in confirmations:
-        covered += len(set(str(x) for x in review.get("confirmed_items", [])) & set(required))
+        ticket_id = str(review.get("ticket_id", ""))
+        if ticket_id not in ticket_ids:
+            continue
+        covered_by_ticket.setdefault(ticket_id, set()).update(
+            str(x) for x in review.get("confirmed_items", []) if str(x) in required_set
+        )
+    covered = sum(len(items) for items in covered_by_ticket.values())
     denominator = total * len(required) if required else 0
     completeness = {
         "confirmed_reviews": len(confirmations),
+        "confirmed_tickets": len(covered_by_ticket),
         "covered_items": covered,
         "required_items": denominator,
         "rate": round(covered / denominator, 4) if denominator else 0.0,
