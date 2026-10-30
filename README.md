@@ -105,6 +105,21 @@ $env:PYTHONPATH="src"; python -m expo_trace run --run-dir runs/demo --now "2026-
   4. 工单状态机
   5. 数据流与审计链
 - [`docs/flowchart.html`](docs/flowchart.html)：同一内容的离线可视化版本，无外部依赖，可直接打印。
+
+```mermaid
+flowchart LR
+    A["脱敏只读导出"] --> B["字段映射<br/>保留原行"]
+    B --> C["数据核对<br/>重复 / 空时间 / 单位 / 链"]
+    C --> D{"版本判定<br/>有效期 + 确认状态"}
+    D -->|"可定位"| E["草稿<br/>未确认 · 不可对外"]
+    D -->|"不可定位"| F["人工队列<br/>原因 · 责任人 · 时限"]
+    E --> G{"收费 / 资格"}
+    G -->|"是"| H["禁止对外<br/>业务负责人 + 审核方"]
+    G -->|"否"| I["审核人确认 / 退回"]
+    F --> I
+    H --> I
+    I --> J["周报<br/>工时 · 返工 · 完整率"]
+```
 ---
 
 ## 设计方案（v1）
@@ -133,22 +148,21 @@ $env:PYTHONPATH="src"; python -m expo_trace run --run-dir runs/demo --now "2026-
 
 核心取舍：**判定与生成分离**（版本与适用性用 SQL/规则判定）、**先过滤再相似**（`status=active` + 生效区间先过滤，再向量召回）、**工具即权限边界**（注册表里没有提交报销单的工具）、**回答可回放**（引用、提示词版本、模型与用量随消息落库）。
 
+---
 
-```mermaid
-flowchart LR
-    A["脱敏只读导出"] --> B["字段映射<br/>保留原行"]
-    B --> C["数据核对<br/>重复 / 空时间 / 单位 / 链"]
-    C --> D{"版本判定<br/>有效期 + 确认状态"}
-    D -->|"可定位"| E["草稿<br/>未确认 · 不可对外"]
-    D -->|"不可定位"| F["人工队列<br/>原因 · 责任人 · 时限"]
-    E --> G{"收费 / 资格"}
-    G -->|"是"| H["禁止对外<br/>业务负责人 + 审核方"]
-    G -->|"否"| I["审核人确认 / 退回"]
-    F --> I
-    H --> I
-    I --> J["周报<br/>工时 · 返工 · 完整率"]
+## 裸问答原型（v3）
+
+[`v3-裸问答原型/`](v3-裸问答原型/rag_qa.py) 是阶段 1 的单文件实现：读 `data/报销制度.md` → 结构感知切片（500 字 / 80 重叠）→ 向量化 → FAISS（可选）或 numpy 索引 → BM25 + 向量混合检索 top3 → 拼提示词 → 调用可配置的 LLM，回答带 `[编号]` 引用，没有依据时直接拒答。
+
+```bash
+python -m pip install numpy
+cd v3-裸问答原型
+python rag_qa.py --selftest                    # 29 项离线自检
+python rag_qa.py -q "出差住宿标准是多少？"        # mock 模式，只看链路
+python rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 ```
 
+`call_llm()` 走 OpenAI 兼容协议，`openai / deepseek / ollama / mock` 四选一；切片、嵌入、混合检索、提示词与拒答判据都标了 `[核心·阶段2复用]`，可直接搬进 FastAPI 服务。详细说明见 [v3-裸问答原型/README.md](v3-裸问答原型/README.md)。
 ---
 
 ## 命令行
@@ -199,6 +213,7 @@ expo-ticket-trace/
 │   └── requirements-traceability.md
 ├── v1设计方案/                   # 业务挖掘、行业分析、流程图、报价单、设计方案
 ├── v2-报销助手架构方案/           # 另一主题：报销助手智能体四层架构选型
+├── v3-裸问答原型/                 # 单文件 RAG 原型（切片 / 混合检索 / 可配置 LLM）
 ├── tests/                        # 103 项 unittest，与 core 模块对应
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh

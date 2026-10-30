@@ -41,3 +41,7 @@ desktop.ini
 examples/.demo-run/
 .deploy-smoke/
 .verify-run/
+
+# v3 裸问答原型：本地向量索引
+v3-裸问答原型/.index/
+v3-裸问答原型/.selftest-index/
