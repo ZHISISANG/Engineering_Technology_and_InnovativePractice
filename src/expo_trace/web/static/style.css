@@ -1,0 +1,77 @@
+:root{
+  --ink:#1d2733; --muted:#66758a; --line:#dce3ec; --bg:#f6f8fb; --card:#fff;
+  --navy:#16324f; --blue:#2f6fb3; --ok:#1f7a4d; --warn:#9a6414; --danger:#a3352c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.65 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+main{max-width:1080px;margin:0 auto;padding:24px 20px 64px}
+h1{font-size:22px;margin:8px 0 16px;color:var(--navy)}
+h2{font-size:17px;margin:28px 0 10px;color:var(--navy)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.topbar{display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;
+  padding:10px 22px;position:sticky;top:0;z-index:5}
+.brand{font-weight:600;letter-spacing:.5px}
+.tag{font-size:11px;background:#2c4f74;border-radius:10px;padding:2px 8px;margin-left:8px}
+.topbar nav{display:flex;gap:16px;flex-wrap:wrap}
+.topbar nav a{color:#d7e4f2}
+.who{margin-left:auto;font-size:13px;color:#d7e4f2}
+.who .role{font-size:11px;background:#2c4f74;border-radius:8px;padding:1px 7px;margin-left:8px}
+.banner{padding:10px 14px;border-radius:8px;margin:0 0 16px;border:1px solid}
+.banner.ok{background:#eef8f1;border-color:#bfe3cb;color:var(--ok)}
+.banner.error{background:#fdf0ee;border-color:#f0c4bd;color:var(--danger)}
+.auth{max-width:380px;margin:8vh auto;background:var(--card);padding:28px;border:1px solid var(--line);
+  border-radius:14px;box-shadow:0 8px 30px rgba(22,50,79,.06)}
+.stack{display:flex;flex-direction:column;gap:14px;margin:18px 0}
+.stack label{display:flex;flex-direction:column;gap:6px;font-size:14px}
+input,select,textarea{padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  font:inherit;background:#fff;color:inherit}
+textarea{resize:vertical}
+button{padding:9px 16px;border:0;border-radius:8px;background:var(--blue);color:#fff;
+  font:inherit;cursor:pointer}
+button:hover{filter:brightness(1.05)}
+button.link{background:none;color:var(--blue);padding:2px 6px}
+button.danger{color:var(--danger)}
+.inline{display:inline-flex;gap:6px;align-items:center;margin:0}
+.chat-shell{max-width:820px;margin:0 auto}
+.chat-head h1{margin-bottom:4px}
+.messages{display:flex;flex-direction:column;gap:14px;margin:22px 0;min-height:180px}
+.msg{max-width:86%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:#eaf2fb;border-color:#cadcf0}
+.msg.assistant{align-self:flex-start}
+.msg.blocked{border-color:#eec9a2;background:#fff8ef}
+.msg.refused{border-color:#d7dde6;background:#f7f9fc}
+.msg .meta{font-size:12px;color:var(--muted);margin-bottom:6px}
+.msg .body{min-height:1em}
+.cites{margin-top:10px;display:grid;gap:8px}
+.cite{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fbfcfe;font-size:13px}
+.cite b{display:block;color:var(--navy)}
+.cite .ver{color:var(--muted)}
+.ask{display:flex;gap:10px;position:sticky;bottom:16px;background:var(--bg);padding:10px 0}
+.ask input{flex:1;padding:12px 14px}
+.hint{margin-top:6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card b{display:block;font-size:22px;color:var(--navy)}
+.card span{font-size:13px;color:var(--muted)}
+.card.warn b{color:var(--warn)}
+.card.danger b{color:var(--danger)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#f0f4f9;color:var(--navy);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;
+  align-items:end;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px;margin:14px 0}
+.grid-form label{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.filters input{width:150px}
+.check{display:flex;gap:6px;align-items:center;font-size:13px}
+.badge{display:inline-block;min-width:18px;text-align:center;border-radius:9px;padding:1px 6px;
+  font-size:12px;background:#eef2f7;color:var(--muted)}
+.badge.warn{background:#fdf1dd;color:var(--warn)}

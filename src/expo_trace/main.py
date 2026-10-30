@@ -338,6 +338,29 @@ def cmd_sample(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    """启动阶段 2 的 Web 服务；没有装 Web 依赖时给出安装提示而不是堆栈。"""
+    try:
+        import uvicorn
+    except ImportError:
+        print("未安装 Web 依赖。请执行：pip install -e \".[web]\"")
+        return 2
+    import os
+    if args.db:
+        os.environ["EXPO_WEB_DB"] = str(Path(args.db).resolve())
+    if args.run_dir:
+        os.environ["EXPO_RUN_DIR"] = str(Path(args.run_dir).resolve())
+    if args.reload:
+        os.environ.setdefault("EXPO_RUN_DIR", str(Path(args.run_dir).resolve()))
+        uvicorn.run("expo_trace.web.app:create_app", factory=True, host=args.host,
+                    port=args.port, reload=True, log_level="info")
+        return 0
+    from expo_trace.web.app import create_app
+    print(f"Web 服务：http://{args.host}:{args.port}/chat（演示账号 admin / reviewer / agent）")
+    uvicorn.run(create_app(), host=args.host, port=args.port, log_level="info")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="expo-trace",
@@ -414,6 +437,14 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--now", default=None)
     audit.add_argument("--json", action="store_true")
     audit.set_defaults(func=cmd_audit)
+
+    web = sub.add_parser("web", help="启动阶段 2 Web 服务（需 .[web] 依赖）")
+    web.add_argument("--host", default="127.0.0.1")
+    web.add_argument("--port", type=int, default=8000)
+    web.add_argument("--db", default=None)
+    web.add_argument("--run-dir", default=DEFAULT_RUN)
+    web.add_argument("--reload", action="store_true")
+    web.set_defaults(func=cmd_web)
 
     sample = sub.add_parser("sample", help="生成确定性抽查计划")
     sample.add_argument("--run-dir", default=DEFAULT_RUN)

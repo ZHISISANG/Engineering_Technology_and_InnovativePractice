@@ -45,3 +45,9 @@ examples/.demo-run/
 # v3 裸问答原型：本地向量索引
 .rag-index/
 .rag-selftest/
+
+# 历史交付物打包文件（不入库，按需从发布页下载）
+*.zip
+# 本地 Web 依赖沙盒验证产物
+.webcheck/
+.tmp/

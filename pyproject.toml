@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "expo-ticket-trace"
-version = "0.1.0"
+version = "0.2.0"
 description = "展商咨询工单的版本可追溯只读试点工具：只读、只出草稿、可审计"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,12 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+# Web 层（阶段 2）是可选安装：核心 CLI、审计与示例都只用标准库。
+web = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "python-multipart>=0.0.9",
+]
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [project.scripts]
@@ -32,6 +38,10 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Web 层的静态资源（chat.js / style.css）不是 Python 包，需显式声明。
+[tool.setuptools.package-data]
+"expo_trace.web" = ["static/*"]
 
 [tool.ruff]
 line-length = 100

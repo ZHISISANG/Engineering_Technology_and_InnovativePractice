@@ -137,27 +137,27 @@ flowchart LR
 
 ---
 
-## 架构方案（v2）：报销助手智能体
+## 架构方案（v2）：展商咨询工单助手
 
-[`docs/architecture-v2/`](docs/architecture-v2/README.md) 是另一份独立的架构选型文档，主题是**报销助手智能体系统**（FastAPI 异步后端、LLM 经 API 接入且可替换、制度文档向量化检索、员工/管理员两角色），与本仓库的展商工单工具没有代码依赖。
+[`docs/architecture-v2/`](docs/architecture-v2/README.md) 是同一项目的架构选型文档，主题是**展商咨询工单助手**（FastAPI 异步后端、LLM 经 API 接入且可替换、展会通知与规则文档向量化检索、咨询员/审核方两角色）。它是 v1 方案的上位技术与选型说明，与本仓库的核心 CLI 没有代码依赖。
 
 | 文件 | 内容 |
 | --- | --- |
 | [01-架构选型方案.docx](docs/architecture-v2/01-架构选型方案.docx) | 四层架构、目录 tree、5 张核心表 + 5 张支撑表、第一周 MVP、选型对比与风险 |
 | [02-图表/四层架构图.png](docs/architecture-v2/02-图表/四层架构图.png) | 1700×1320 PNG：入口层 / 服务层 / 智能体编排层 / 数据模型层 + 请求路径与两条红线 |
 
-核心取舍：**判定与生成分离**（版本与适用性用 SQL/规则判定）、**先过滤再相似**（`status=active` + 生效区间先过滤，再向量召回）、**工具即权限边界**（注册表里没有提交报销单的工具）、**回答可回放**（引用、提示词版本、模型与用量随消息落库）。
+核心取舍：**判定与生成分离**（版本与适用性用 SQL/规则判定）、**先过滤再相似**（`status=active` + 生效区间先过滤，再向量召回）、**工具即权限边界**（注册表里没有对外发送的工具，只到回复草稿为止）、**回答可回放**（引用、提示词版本、模型与用量随消息落库）。
 
 ---
 
 ## 裸问答原型（v3）
 
-[`src/rag_qa.py`](src/rag_qa.py) 是阶段 1 的单文件实现：读 `data/policy/报销制度.md` → 结构感知切片（500 字 / 80 重叠）→ 向量化 → FAISS（可选）或 numpy 索引 → BM25 + 向量混合检索 top3 → 拼提示词 → 调用可配置的 LLM，回答带 `[编号]` 引用，没有依据时直接拒答。
+[`src/rag_qa.py`](src/rag_qa.py) 是阶段 1 的单文件实现（实现位于 `src/expo_trace/rag_qa.py`，根下同名文件只是命令行入口）：读 `data/policy/展商咨询规则.md` → 结构感知切片（500 字 / 80 重叠）→ 向量化 → FAISS（可选）或 numpy 索引 → BM25 + 向量混合检索 top3 → 拼提示词 → 调用可配置的 LLM，回答带 `[编号]` 引用，没有依据时直接拒答。
 
 ```bash
 python -m pip install numpy
 python src/rag_qa.py --selftest                  # 29 项离线自检
-python src/rag_qa.py -q "出差住宿标准是多少？"      # mock 模式，只看链路
+python src/rag_qa.py -q "展商住宿代订标准是多少？"    # mock 模式，只看链路
 python src/rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 ```
 
@@ -167,7 +167,7 @@ python src/rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 
 ## 阶段 2 设计（待确认）
 
-三份提示词（员工聊天入口、管理后台、Agent 工具）原文对象是"报销助手"；[`docs/phase2/`](docs/phase2/README.md) 已把对象逐项替换为**展商咨询工单**，只出设计、未写代码：
+三份提示词（员工聊天入口、管理后台、Agent 工具）来自外部模板；[`docs/phase2/`](docs/phase2/README.md) 已把对象逐项替换为**展商咨询工单**，与本项目的需求发现材料一致：
 
 | 文档 | 内容 | 关键决定 |
 | --- | --- | --- |
@@ -220,7 +220,8 @@ expo-ticket-trace/
 │   │   │                         # routing / drafting / review /
 │   │   │                         # metrics / acceptance / report / audit
 │   │   └── utils/                # YAML 子集、时间四态、脱敏、哈希
-│   └── rag_qa.py                 # 报销制度裸问答原型（单文件，可直接运行）
+│   ├── rag_qa.py                 # 制度裸问答原型（切片/混合检索/LLM 调用）
+│   └── web/                      # 阶段 2：聊天界面与管理后台（可选依赖）
 ├── docs/
 │   ├── design.md                 # 设计思路与取舍
 │   ├── api.md                    # CLI / Python API / 产物 schema
@@ -231,14 +232,14 @@ expo-ticket-trace/
 │   ├── rag-prototype.md          # v3 原型说明（原 v3-裸问答原型/README.md）
 │   ├── phase2/                   # 阶段 2 设计：聊天接口 / 管理后台 / Agent 工具
 │   ├── solution-v1/              # v1 交付：业务挖掘 / 行业分析 / 流程图 / 报价单 / 方案
-│   └── architecture-v2/          # v2 交付：报销助手四层架构选型
-├── tests/                        # 112 项 unittest，与 core 模块对应
+│   └── architecture-v2/          # v2 交付：展商咨询工单助手四层架构选型
+├── tests/                        # 128 项 unittest（16 项 Web 测试缺依赖时跳过）
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh
 ├── config/default.yaml           # 非机密默认配置
 ├── data/
 │   ├── demo/export/              # 12 个坑的合成样本
-│   └── policy/报销制度.md         # v3 原型的合成制度原文
+│   └── policy/展商咨询规则.md      # v3 原型的合成规则原文
 └── .github/                      # CI、Issue 模板、PR 模板
 ```
 
@@ -252,14 +253,13 @@ expo-ticket-trace/
 | 原位置 | 现位置 | 说明 |
 | --- | --- | --- |
 | `v1设计方案/` | `docs/solution-v1/` | 5 份 Word/Excel + 3 张 PNG，内部相对链接已随之生效 |
-| `v2-报销助手架构方案/` | `docs/architecture-v2/` | 架构选型 docx + 架构图 |
+| `v2-展商咨询工单助手架构方案/` | `docs/architecture-v2/` | 架构选型 docx + 架构图 |
 | `v3-裸问答原型/rag_qa.py` | `src/rag_qa.py` | 单文件原型，默认路径改为仓库根下的 `data/policy/` 与 `.rag-index/` |
-| `v3-裸问答原型/data/报销制度.md` | `data/policy/报销制度.md` | 合成制度原文 |
+| `v3-裸问答原型/data/展商咨询规则.md` | `data/policy/展商咨询规则.md` | 合成规则原文 |
 | `v3-裸问答原型/README.md` | `docs/rag-prototype.md` | 命令示例改为从仓库根运行 |
 
 被更新的既有文件只有 3 个：`README.md`（本章节与结构树）、`CHANGELOG.md`（路径与整合记录）、`.gitignore`（索引目录）。
 >
-> 仓库根目录另有一个与本工具无关的历史文件 `报销助手_f24011321.zip`（仓库原有内容，保留未删）。
 
 ---
 
@@ -297,7 +297,7 @@ expo-ticket-trace/
 ## 开发
 
 ```bash
-python -m unittest discover -s tests -t .    # 112 项，零依赖
+python -m unittest discover -s tests -t .    # 128 项；未装 Web 依赖时 16 项跳过
 python -m compileall -q src
 python examples/demo.py                       # 分步演示（含确认、暂停、快照兜底）
 ```
