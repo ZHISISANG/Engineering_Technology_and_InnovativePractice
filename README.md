@@ -9,6 +9,52 @@
 
 ---
 
+## 如何打开应用
+
+工具有两种用法：**Web 服务**（问答与后台，阶段 2）和**命令行流水线**（阶段 1，零依赖）。只想看效果，用 Web；只想验证判定与审计，用命令行。
+
+### Web 服务（推荐先看这个）
+
+需要 Python 3.11+，并额外安装 Web 依赖（约 3 个包）：
+
+```bash
+python -m pip install -e ".[web]"
+
+expo-trace web --port 8000
+# 等价写法：PYTHONPATH=src python -m expo_trace web --port 8000
+```
+
+启动后终端打印 `Web 服务：http://127.0.0.1:8000/chat`，浏览器打开：
+
+| 地址 | 用途 |
+| --- | --- |
+| http://127.0.0.1:8000/chat | 咨询问答：带版本引用的回答、拒答与转人工 |
+| http://127.0.0.1:8000/admin | 管理后台：概览、对话审计、知识库、提示词、审计链 |
+| http://127.0.0.1:8000/healthz | 探活（返回 `{"status":"ok"}`） |
+| http://127.0.0.1:8000/api/v1/health | 运行状态：数据目录、是否暂停、供应商 |
+
+登录账号 `admin`（审核方）/ `reviewer`（审核方）/ `agent`（咨询员），**初始密码 `demo-1234`**（可用环境变量 `EXPO_SEED_PASSWORD` 覆盖）。登录页也会显示该密码，便于本地试用；正式部署请改掉。
+
+停止服务：终端 `Ctrl+C`。常用参数：`--port`（默认 8000）、`--db runs/web/app.db`、`--run-dir runs/final`、`--reload`（开发热重载）。
+
+### 命令行流水线（零第三方依赖）
+
+```bash
+PYTHONPATH=src python -m expo_trace run --export data/demo/export --run-dir runs/demo
+PYTHONPATH=src python -m expo_trace status --run-dir runs/demo
+```
+
+### 起不来时
+
+| 现象 | 处理 |
+| --- | --- |
+| `未安装 Web 依赖。请执行：pip install -e ".[web]"`（退出码 2） | 先装 Web 依赖，或用上面的命令行方式 |
+| `错误：运行目录缺少 output/tickets.jsonl`（退出码 2） | `--run-dir` 指错了：先跑一次 `run` 生成产物，或去掉 `--run-dir` 用默认目录 |
+| `端口被占用` | 换端口，如 `--port 8010` |
+| 打开 `/chat` 跳到登录页 | 正常：未登录会跳到 `/admin/login` |
+
+---
+
 ## 为什么需要它
 
 现场的三处断点不是“回复慢”，而是**对不上**：
@@ -38,7 +84,7 @@
 
 ---
 
-## 60 秒上手
+## 命令行快速跑通
 
 要求 Python **3.11+**，运行时**零第三方依赖**。
 
@@ -131,9 +177,20 @@ flowchart LR
 | [01-业务挖掘报告.docx](docs/solution-v1/01-业务挖掘报告.docx) | 36 条访谈事实、六角色权责、八环节断点、六条需求假设与证据缺口 |
 | [02-行业分析.docx](docs/solution-v1/02-行业分析.docx) | 会展行业边界、数字化成熟度、技术趋势、合规约束与对本方案的启示 |
 | [03-流程图说明.docx](docs/solution-v1/03-流程图说明.docx) | 现状流程图、数智化转型后流程图、总体架构图与逐图说明 |
-| [04-报价单.xlsx](docs/solution-v1/04-报价单.xlsx) | 7 项交付、26 人天工作分解、税率与付款节奏、假设与不含项 |
+| [04-报价单.xlsx](docs/solution-v1/04-报价单.xlsx) | 7 项交付、26 个工作日的工作分解、税率与付款节奏、假设与不含项 |
 | [05-设计方案.docx](docs/solution-v1/05-设计方案.docx) | 目标、架构、数据与功能设计、安全、实施计划、验收与风险 |
 | [03-图表/](docs/solution-v1/03-图表) | 三张 1700px 宽的 PNG 原图，可直接插入汇报材料 |
+
+### 项目说明文件（三种格式）
+
+[`docs/briefing/`](docs/briefing) 用**同一份内容**保存三种格式：客户简报、现状信息请求表、业务发现访谈问题库、
+利益相关者资料与分工，以及六位受访者的 31 组访谈问答。
+
+| 文件 | 格式 | 内容 |
+| --- | --- | --- |
+| [说明文件.md](docs/briefing/说明文件.md) | Markdown | 完整文档：四部分简报 + 六人访谈记录，可评审可打印 |
+| [说明文件.json](docs/briefing/说明文件.json) | JSON | 同一内容的唯一数据源（`项目基本简报` / `六人访谈记录` 两大块） |
+| [说明文件.csv](docs/briefing/说明文件.csv) | CSV | 长表：一行一个字段值，按「模块 / 分类 / 编号」筛选统计 |
 
 ---
 
@@ -192,6 +249,7 @@ python src/rag_qa.py -q "发票丢了怎么办？" --provider deepseek
 | `expo-trace audit verify` | 校验审计哈希链，定位断点 |
 | `expo-trace audit show --ticket T-1001` | 查看谁查过、用哪版、谁确认 |
 | `expo-trace sample --size 80` | 生成确定性抽查计划 |
+| `expo-trace web --port 8000` | 启动阶段 2 Web 服务（需 `pip install -e ".[web]"`） |
 
 退出码：`0` 成功 · `2` 输入/配置错误 · `3` 试点已暂停 · `4` 确认被拒绝 · `5` 已阻止的越界动作。
 完整参数与产物 schema 见 [`docs/api.md`](docs/api.md)。
@@ -231,9 +289,10 @@ expo-ticket-trace/
 │   ├── requirements-traceability.md
 │   ├── rag-prototype.md          # v3 原型说明（原 v3-裸问答原型/README.md）
 │   ├── phase2/                   # 阶段 2 设计：聊天接口 / 管理后台 / Agent 工具
+│   ├── briefing/                 # 项目说明文件：客户简报 / 信息请求 / 问题库 / 分工 / 访谈
 │   ├── solution-v1/              # v1 交付：业务挖掘 / 行业分析 / 流程图 / 报价单 / 方案
 │   └── architecture-v2/          # v2 交付：展商咨询工单助手四层架构选型
-├── tests/                        # 128 项 unittest（16 项 Web 测试缺依赖时跳过）
+├── tests/                        # 133 项 unittest（16 项 Web 测试缺依赖时跳过）
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh
 ├── config/default.yaml           # 非机密默认配置
@@ -297,7 +356,7 @@ expo-ticket-trace/
 ## 开发
 
 ```bash
-python -m unittest discover -s tests -t .    # 128 项；未装 Web 依赖时 16 项跳过
+python -m unittest discover -s tests -t .    # 133 项；未装 Web 依赖时 16 项跳过
 python -m compileall -q src
 python examples/demo.py                       # 分步演示（含确认、暂停、快照兜底）
 ```

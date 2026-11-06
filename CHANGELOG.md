@@ -25,7 +25,42 @@
 - `src/expo_trace/rag_qa.py`：模块说明、`SYSTEM_PROMPT`、argparse 描述、`--policy` 默认路径、拒答话术与注释改为展商咨询口径。
 - `README.md`、`docs/rag-prototype.md`、`docs/architecture-v2/README.md`、本文件的历史条目统一去掉"报销助手"表述。
 - 删除仓库根目录的历史打包文件 `报销助手_f24011321.zip`（约 11MB），`.gitignore` 增 `*.zip`。
+### 新增（项目说明文件与启动说明）
+
+- `docs/briefing/`：项目说明文件，同一内容三种格式（`说明文件.md` / `.json` / `.csv`）——客户简报、现状信息请求表（10 项）、业务发现访谈问题库（31 条）、利益相关者资料与分工（6 人 + 8 项 RACI）、六人访谈记录（6 人 31 组问答，保留原话与 f00–f55 证据编号）。
+- `README.md` 增「如何打开应用」：Web 服务启动命令、页面地址、初始密码、命令行方式与常见启动错误处理。
+- `docs/api.md` 增 `web` 子命令章节（参数、行为约束、探活地址）。
+
+### 修复（Web 启动与配置）
+
+- `Settings.from_env()` 在 `--run-dir` / `EXPO_RUN_DIR` 显式指定但不可用时静默回落到 `runs/demo`，试点可能在错误批次数据上运行；改为抛 `InputError`，仅未指定时才回落。
+- `expo-trace web` 的 `--run-dir` 默认值由 `runs/demo` 改为 `None`，交给配置层走 `runs/final → runs/demo`；`cmd_web` 先校验配置，报错打印中文提示并返回 2，不抛堆栈；reload 分支不再对 `None` 取 `Path`。
+- `expo_trace.web.__init__` 改为惰性导出 `create_app`，缺 Web 依赖时 `import expo_trace.web.settings` 不再失败。
+- 新增 `tests/test_web_settings.py`（5 项）：显式目录报错、可用目录保留、默认回落、数据库路径取环境变量、默认密钥标记。
+
+### 变更（界面与用词）
+
+- 登录页显示初始密码 `demo-1234`，并注明可用 `EXPO_SEED_PASSWORD` 覆盖；账号后标注角色（审核方 / 咨询员）。
+- 「人天」统一改为「工作日」：`README.md`、`docs/phase2/README.md`、`docs/solution-v1/README.md`、`docs/solution-v1/04-报价单.xlsx`。
+
 - `docs/architecture-v2/01-架构选型方案.docx` 与 `02-图表/四层架构图.png` 按展商咨询口径重做：正文改为「展商咨询工单助手」（工具白名单换成 `get_ticket / resolve_version / check_fields / compose_draft / request_human_review / get_pilot_status`，表结构改为 `policy_documents / reply_drafts / draft_citations`，验收与演示脚本改住宿代订与收费边界场景），架构图重绘并替换文档内嵌图。
+
+### 新增（项目说明文件）
+
+- `docs/briefing/`：项目说明文件，md / json / csv 三种格式同源——客户简报、现状信息请求表（10 项）、业务发现访谈问题库（31 条真实提问 + 3 条方法层问题）、利益相关者资料与分工（六人角色卡 + 8 项 RACI）、六人访谈记录（6 人 31 组问答，保留原话与 f00–f55 证据码）。
+
+### 修复（Web 启动）
+
+- `Settings.from_env()` 在显式指定 `--run-dir` / `EXPO_RUN_DIR` 却缺 `output/tickets.jsonl` 时静默回落到 `runs/demo`，试点可能在错误批次数据上运行；改为抛 `InputError`，未显式指定时才回落。
+- `expo-trace web` 的 `--run-dir` 默认值由 `runs/demo` 改为 `None`，交给配置层走 `runs/final → runs/demo`；`cmd_web` 先校验配置再起 uvicorn，报错打印中文提示并返回 `2`，不再抛堆栈；reload 分支不再对 `None` 求路径。
+- `expo_trace.web.__init__` 改为惰性导出 `create_app`：缺 fastapi 时配置层仍可导入，新增 `tests/test_web_settings.py`（5 项）。
+- `docs/api.md` 增 `web` 子命令章节（参数、行为约束、页面与探活地址）。
+
+### 变更（文案与入口）
+
+- 登录页显示初始密码 `demo-1234` 及覆盖方式（`EXPO_SEED_PASSWORD`），账号后标注角色。
+- 全仓停用「人天」：`README.md`、`docs/phase2/README.md`、`docs/solution-v1/README.md` 与 `docs/solution-v1/04-报价单.xlsx` 统一改为「工作日」。
+- `README.md` 新增「如何打开应用」一节，前置 Web 与命令行两种启动方式、页面地址、初始密码与常见故障处理。
 
 
 ### 新增（阶段 2 设计，仅文档）

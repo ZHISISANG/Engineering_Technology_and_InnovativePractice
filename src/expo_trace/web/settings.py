@@ -10,6 +10,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..utils.errors import InputError
+
 ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -30,8 +32,13 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
+        raw_run_dir = os.environ.get("EXPO_RUN_DIR", "").strip()
         run_dir = _path("EXPO_RUN_DIR", ROOT / "runs" / "final")
         if not (run_dir / "output" / "tickets.jsonl").exists():
+            # 显式指定（CLI --run-dir / EXPO_RUN_DIR）却不可用时必须报错：
+            # 静默回落到 demo 会让试点在错误的批次数据上跑起来。
+            if raw_run_dir:
+                raise InputError(f"运行目录缺少 output/tickets.jsonl：{run_dir}")
             run_dir = ROOT / "runs" / "demo"
         return cls(
             db_path=_path("EXPO_WEB_DB", ROOT / "runs" / "web" / "app.db"),

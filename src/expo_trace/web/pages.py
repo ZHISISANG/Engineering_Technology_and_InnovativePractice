@@ -60,7 +60,8 @@ def login_page(error: str = "") -> str:
     <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
     <button type="submit">登录</button>
   </form>
-  <p class="muted small">演示账号：admin / reviewer / agent，初始密码见部署说明。</p>
+  <p class="muted small">演示账号：admin（审核方）/ reviewer（审核方）/ agent（咨询员）</p>
+  <p class="muted small">初始密码：<strong>demo-1234</strong>（演示环境；部署时用 EXPO_SEED_PASSWORD 覆盖）</p>
 </section>"""
     return layout("登录", body)
 

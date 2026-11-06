@@ -350,14 +350,22 @@ def cmd_web(args: argparse.Namespace) -> int:
         os.environ["EXPO_WEB_DB"] = str(Path(args.db).resolve())
     if args.run_dir:
         os.environ["EXPO_RUN_DIR"] = str(Path(args.run_dir).resolve())
+    from expo_trace.web.app import create_app
+    from expo_trace.web.settings import Settings
+    try:
+        # 先校验配置：显式 --run-dir 不可用时直接报错，不回落到演示数据。
+        Settings.from_env()
+        app = None if args.reload else create_app()
+    except InputError as exc:
+        print(f"错误：{exc}")
+        return 2
     if args.reload:
-        os.environ.setdefault("EXPO_RUN_DIR", str(Path(args.run_dir).resolve()))
+        # EXPO_RUN_DIR 已在上面按 --run-dir 设置；未指定时交给 Settings.from_env 的默认回落。
         uvicorn.run("expo_trace.web.app:create_app", factory=True, host=args.host,
                     port=args.port, reload=True, log_level="info")
         return 0
-    from expo_trace.web.app import create_app
     print(f"Web 服务：http://{args.host}:{args.port}/chat（演示账号 admin / reviewer / agent）")
-    uvicorn.run(create_app(), host=args.host, port=args.port, log_level="info")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
     return 0
 
 
@@ -442,7 +450,9 @@ def build_parser() -> argparse.ArgumentParser:
     web.add_argument("--host", default="127.0.0.1")
     web.add_argument("--port", type=int, default=8000)
     web.add_argument("--db", default=None)
-    web.add_argument("--run-dir", default=DEFAULT_RUN)
+    # 默认 None：交给 Settings.from_env 走 runs/final → runs/demo 的回落；
+    # 显式指定时则必须是可用运行目录，不再静默回落。
+    web.add_argument("--run-dir", default=None)
     web.add_argument("--reload", action="store_true")
     web.set_defaults(func=cmd_web)
 

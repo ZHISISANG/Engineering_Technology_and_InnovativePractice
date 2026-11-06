@@ -157,6 +157,27 @@ expo-trace sample --run-dir runs/demo --size 80 [--json]
 按问题类别轮转抽样，结果可复现；实际数量超过工单数时只返回全部工单。`--size` 必须为正整数，否则返回 `2`。
 正式抽查量是否沿用 80 条需审批（f42）。
 
+### 2.9 `web` —— 启动阶段 2 Web 服务
+
+```bash
+expo-trace web --host 127.0.0.1 --port 8000 \
+  --db runs/web/app.db --run-dir runs/final
+```
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `--host` | `127.0.0.1` | 只监听本机，不对外暴露 |
+| `--port` | `8000` | 监听端口 |
+| `--db` | `runs/web/app.db` | SQLite 路径，父目录自动创建 |
+| `--run-dir` | 未指定时 `runs/final` → `runs/demo` | 只读线索数据来源 |
+| `--reload` | 否 | 开发热重载（会先校验配置再起进程） |
+
+行为约束：
+
+- 未装 Web 依赖时打印安装提示并返回 `2`（`pip install -e ".[web]"`），不抛堆栈。
+- `--run-dir` **显式指定**但缺 `output/tickets.jsonl` 时直接报错并返回 `2`，**不回落**到 `runs/demo`；只有未指定时才走默认回落。
+- 页面：`/chat` 问答、`/admin` 后台（需 `admin` / `reviewer` 角色）；探活用 `/healthz` 与 `/api/v1/health`；`/docs`、`/openapi.json` 关闭。
+
 ---
 
 ## 3. 运行目录产物
