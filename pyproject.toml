@@ -38,6 +38,8 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+# src/1-问答助手归档、src/2-MVP项目 是交付说明目录，不是 Python 包
+exclude = ["1-*", "2-*"]
 
 # Web 层的静态资源（chat.js / style.css）不是 Python 包，需显式声明。
 [tool.setuptools.package-data]

@@ -14,7 +14,9 @@ h2{font-size:17px;margin:28px 0 10px;color:var(--navy)}
 .small{font-size:13px}
 .topbar{display:flex;align-items:center;gap:20px;background:var(--navy);color:#fff;
   padding:10px 22px;position:sticky;top:0;z-index:5}
-.brand{font-weight:600;letter-spacing:.5px}
+.brand{font-weight:600;letter-spacing:.5px;color:#fff;text-decoration:none;display:inline-flex;align-items:baseline;gap:8px}
+.brand:hover{opacity:.9}
+.brand:focus-visible{outline:2px solid #9ec1ea;outline-offset:4px}
 .tag{font-size:11px;background:#2c4f74;border-radius:10px;padding:2px 8px;margin-left:8px}
 .topbar nav{display:flex;gap:16px;flex-wrap:wrap}
 .topbar nav a{color:#d7e4f2}

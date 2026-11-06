@@ -183,6 +183,22 @@ class ChatTests(WebBase):
         self.assertEqual(done["answer_type"], "blocked")
         self.assertEqual(done["code"], "E_PILOT_PAUSED")
 
+    def test_chat_page_nav_only_for_reviewers(self) -> None:
+        """问答页给审核方/管理员显示后台导航；咨询员保持简洁；品牌是回问答页的链接。"""
+        staff = self.client()
+        staff.post("/admin/login", data={"username": "agent", "password": PASSWORD},
+                   follow_redirects=False)
+        page = staff.get("/chat").text
+        self.assertIn('class="brand" href="/chat"', page)
+        self.assertNotIn("/admin/kb", page)
+
+        admin = self.client()
+        admin.post("/admin/login", data={"username": "admin", "password": PASSWORD},
+                   follow_redirects=False)
+        page = admin.get("/chat").text
+        self.assertIn("/admin/kb", page)
+        self.assertIn("/admin/audit", page)
+
     def test_messages_persist_with_citations(self) -> None:
         client = self.client()
         headers = self.auth(client)

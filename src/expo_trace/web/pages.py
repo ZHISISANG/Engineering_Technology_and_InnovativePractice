@@ -39,8 +39,8 @@ def layout(title: str, body: str, *, user: dict[str, Any] | None = None,
     if user:
         links = "".join(f"<a href=\"{esc(href)}\">{esc(label)}</a>" for href, label in NAV) if nav else ""
         bar = (
-            "<header class=\"topbar\"><div class=\"brand\">展会工单助手"
-            "<span class=\"tag\">v1 试点</span></div>"
+            "<header class=\"topbar\"><a class=\"brand\" href=\"/chat\">展会工单助手"
+            "<span class=\"tag\">v1 试点</span></a>"
             f"<nav>{links}</nav>"
             f"<div class=\"who\">{esc(user['name'])}<span class=\"role\">{esc(user['role'])}</span></div>"
             "</header>"
@@ -81,7 +81,9 @@ def chat_page(user: dict[str, Any]) -> str:
   <div class="hint muted small">提问带 T-1001 会走工单版本判定；不带则检索知识库。</div>
 </section>
 <script src="/static/chat.js" defer></script>"""
-    return layout("咨询问答", body, user=user)
+    # 审核方/管理员从问答页也要能回后台，否则导航栏在 /chat 上是空的
+    show_nav = user.get("role") in ("admin", "reviewer")
+    return layout("咨询问答", body, user=user, nav=show_nav)
 
 
 def admin_page(title: str, body: str, user: dict[str, Any], csrf: str,

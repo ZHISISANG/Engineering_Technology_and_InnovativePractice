@@ -51,3 +51,6 @@ examples/.demo-run/
 # 本地 Web 依赖沙盒验证产物
 .webcheck/
 .tmp/
+
+# 归档交付物需要随仓库分发（覆盖上面的 *.zip）
+!archive/**/*.zip
