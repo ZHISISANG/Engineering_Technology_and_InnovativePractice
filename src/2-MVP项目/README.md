@@ -77,7 +77,7 @@ Agent 不是一个开放式 ReAct 循环，而是**固定流程 + 白名单工�
 pip install -e ".[web]"          # Web 依赖
 expo-trace run --export data/demo/export --run-dir runs/final --now "2026-10-20 10:00"
 expo-trace web --port 8000       # http://127.0.0.1:8000/chat
-python -m unittest discover -s tests -t .   # 134 项
+python -m unittest discover -s tests -t .   # 142 项
 ```
 
 完整启动、运维与故障处置见 [`docs/9-运行手册.docx`](../../docs/9-运行手册.docx)。

@@ -77,3 +77,28 @@ tr:last-child td{border-bottom:0}
 .badge{display:inline-block;min-width:18px;text-align:center;border-radius:9px;padding:1px 6px;
   font-size:12px;background:#eef2f7;color:var(--muted)}
 .badge.warn{background:#fdf1dd;color:var(--warn)}
+
+/* 普通用户界面：会话侧栏与草稿 */
+.eyebrow{margin:0 0 6px;font-size:12px;letter-spacing:.12em;color:#5d6470;text-transform:none}
+.chat-layout{display:grid;grid-template-columns:240px 1fr;gap:28px;align-items:start;max-width:1180px}
+.side{border-right:1px solid #e3e7ee;padding-right:18px;position:sticky;top:24px}
+.side-title{margin:18px 0 8px;font-size:13px;color:#5d6470;font-weight:600}
+.side-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.side-item{display:block;padding:8px 10px;border-radius:8px;color:#1f2430;text-decoration:none;
+  border:1px solid transparent;font-size:13px}
+.side-item:hover{background:#f3f6fb;border-color:#e3e7ee}
+.side-item.active{background:#eef4fc;border-color:#2f5fa8;color:#1b3f75}
+.side-item .mono{color:#8494ab;font-size:11px;margin-right:6px}
+.side-link{display:inline-block;margin-top:16px;font-size:13px;color:#2f5fa8;text-decoration:none}
+.side-link:hover{text-decoration:underline}
+.topbar .actions{display:flex;align-items:center;gap:14px;margin-left:auto}
+.ghost{color:#d7e4f2;text-decoration:none;font-size:13px}
+.ghost:hover{color:#fff;text-decoration:underline}
+.topbar .link{color:#d7e4f2;background:none;border:0;padding:0;font-size:13px;cursor:pointer}
+.topbar .link:hover{color:#fff;text-decoration:underline}
+.block{width:100%}
+.msg .note{margin-top:6px;font-size:12px;color:#b03a3a}
+.msg.blocked .bubble,.msg.refused .bubble{background:#fff8e6;border-color:#e0b64a}
+.msg.error .bubble{background:#fdecec;border-color:#b03a3a}
+.who-small{font-size:12px;color:#8494ab;margin-bottom:2px}
+@media (max-width:860px){.chat-layout{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid #e3e7ee;padding:0 0 12px;position:static}}

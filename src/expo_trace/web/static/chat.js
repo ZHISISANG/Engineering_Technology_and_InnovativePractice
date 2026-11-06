@@ -7,7 +7,9 @@ const form = document.getElementById("ask");
 const input = document.getElementById("question");
 const sendBtn = document.getElementById("send");
 
-let sessionId = null;
+const shell = document.getElementById("chat-shell");
+const SERVER_SESSION = shell ? (shell.dataset.session || "") : "";
+let sessionId = SERVER_SESSION || null;
 let busy = false;
 
 function node(tag, cls, text) {
@@ -19,8 +21,8 @@ function node(tag, cls, text) {
 
 function addMessage(role, text) {
   const box = node("div", "msg " + role);
-  const meta = node("div", "meta", role === "user" ? "我" : "助手");
-  const body = node("div", "body", text || "");
+  const meta = node("div", "who-small", role === "user" ? "我" : "助手");
+  const body = node("div", "bubble", text || "");
   box.append(meta, body);
   messagesEl.append(box);
   box.scrollIntoView({ block: "end", behavior: "smooth" });
@@ -37,8 +39,9 @@ async function jsonOrNull(resp) {
 }
 
 async function ensureSession() {
+  if (SERVER_SESSION) { sessionId = SERVER_SESSION; return true; }  // 服务端已渲染历史
   const resp = await fetch("/api/v1/sessions");
-  if (resp.status === 401) { location.href = "/admin/login"; return false; }
+  if (resp.status === 401) { location.href = "/login"; return false; }
   const data = await jsonOrNull(resp);
   if (data && data.sessions && data.sessions.length) {
     sessionId = data.sessions[0].id;
@@ -46,7 +49,7 @@ async function ensureSession() {
     return true;
   }
   const created = await fetch("/api/v1/sessions", { method: "POST" });
-  if (created.status === 401) { location.href = "/admin/login"; return false; }
+  if (created.status === 401) { location.href = "/login"; return false; }
   const body = await jsonOrNull(created);
   sessionId = body.session_id;
   return true;

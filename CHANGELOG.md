@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+### 新增（普通用户界面与角色隔离）
+
+- 咨询员入口 `/login`（与 `/admin/login` 分离、互链），登录后按角色落地 `/chat` 或 `/admin`；错入口登录返回 401 并提示对应入口。
+- `/chat` 增会话侧栏（我的会话、新建会话、`/drafts` 入口）与服务端渲染的历史消息；`POST /chat/new` 新建会话。
+- 新增 `/drafts`「我的草稿」：只读列出本人草稿（工单、依据版本、状态、生成时间）。
+- 新增 `POST /logout`：清除 `expo_token` / `expo_csrf` 并回到 `/login`；两个界面的右上角都有「退出」。
+- 角色隔离：咨询员访问 `/admin` 返回 403；审核方/管理员访问 `/chat`、`/drafts` 一律 303 回 `/admin`。
+- 测试：`test_staff_entry_login_and_logout`、`test_chat_sessions_and_drafts_pages`、`test_role_isolation_between_staff_and_admin`。
+
 ### 变更（交件按编号命名）
 
 - 文档按课程清单编号与标题重命名：`docs/1-六人访谈记录.*`、`docs/2-项目基本简报/2-1…2-4`、`docs/3-典型事件*`、

@@ -11,6 +11,17 @@
 
 ## 如何打开应用
 
+应用分两个入口，**按账号角色隔离**：咨询员只能进咨询员界面，审核方/管理员只能进后台。
+
+| 角色（账号） | 入口 | 登录后落地 | 页面内容 | 被拒绝 |
+| --- | --- | --- | --- | --- |
+| 咨询员（agent） | `/login` | `/chat` | 会话侧栏、新建会话、问答与引用、`/drafts` 我的草稿 | 访问 `/admin` → 403 |
+| 审核方 / 管理员（reviewer / admin） | `/admin/login` | `/admin` | 概览、知识库、提示词、对话审计、设置、审计链 | 访问 `/chat`、`/drafts` → 303 回 `/admin` |
+
+- 两个入口互相链接；账号走错入口会提示「请使用咨询员入口」/「请使用后台入口」。
+- 右上角「退出」（`POST /logout`）清除会话并回到 `/login`。
+- 咨询员界面不显示后台导航；`/drafts` 只读展示本人草稿（带「未确认 · 不可对外」，系统没有发送通道）。
+
 工具有两种用法：**Web 服务**（问答与后台，阶段 2）和**命令行流水线**（阶段 1，零依赖）。只想看效果，用 Web；只想验证判定与审计，用命令行。
 
 ### Web 服务（推荐先看这个）
@@ -51,7 +62,7 @@ PYTHONPATH=src python -m expo_trace status --run-dir runs/demo
 | `未安装 Web 依赖。请执行：pip install -e ".[web]"`（退出码 2） | 先装 Web 依赖，或用上面的命令行方式 |
 | `错误：运行目录缺少 output/tickets.jsonl`（退出码 2） | `--run-dir` 指错了：先跑一次 `run` 生成产物，或去掉 `--run-dir` 用默认目录 |
 | `端口被占用` | 换端口，如 `--port 8010` |
-| 打开 `/chat` 跳到登录页 | 正常：未登录会跳到 `/admin/login` |
+| 打开 `/chat` 跳到登录页 | 正常：未登录会跳到 `/login`（审核方与管理员用 `/admin/login`） |
 
 ---
 
@@ -100,7 +111,7 @@ PYTHONPATH=src python -m expo_trace status --run-dir runs/demo
 | docs 8 | 报价（低 / 中 / 高 + 投入产出） | [8-报价方案.md](docs/8-报价方案.md) · [8-报价方案.docx](docs/8-报价方案.docx) · [报价单.xlsx](docs/solution-v1/04-报价单.xlsx) |
 | docs 9 | 上线交付运行手册 | [9-运行手册.docx](docs/9-运行手册.docx) |
 | src 1 | 问答助手归档 | [src/1-问答助手归档/](src/1-问答助手归档)：README + 可下载 zip |
-| src 2 | MVP：工程架构 / Agent 框架 / 知识库 / ≥3 处人工确认 | [src/2-MVP项目/](src/2-MVP项目)：说明 + [2-1-人工确认点](src/2-MVP项目/2-1-人工确认点.md)；代码在 [src/expo_trace/](src/expo_trace) |
+| src 2 | MVP：工程架构 / Agent 框架 / 知识库 / ≥3 处人工确认 | [src/2-MVP项目/](src/2-MVP项目)：说明 + [2-1-人工确认点](src/2-MVP项目/2-1-人工确认点.md) + [2-2-应用归档.zip](src/2-MVP项目/2-2-应用归档.zip)；代码在 [src/expo_trace/](src/expo_trace) |
 | test 1 | 测试方案 md + docx | [1-测试方案.md](test/1-测试方案.md) · [1-测试方案.docx](test/1-测试方案.docx) |
 | test 2 | 五份场景过程 docx | [2-1-正常](test/2-1-正常场景测试.docx) · [2-2-边界](test/2-2-边界场景测试.docx) · [2-3-对抗](test/2-3-对抗场景测试.docx) · [2-4-权限](test/2-4-权限场景测试.docx) · [2-5-故障](test/2-5-故障场景测试.docx) |
 | test 3 | MVP 上线部署地址 | [3-MVP部署地址.md](test/3-MVP部署地址.md) · [3-部署说明.docx](test/3-部署说明.docx) |
@@ -230,7 +241,7 @@ flowchart LR
 
 ## 测试与部署
 
-测试按五类场景组织（正常 / 边界 / 对抗 / 权限 / 故障），共 27 条用例，全部通过；另有 134 项自动化用例兜底。
+测试按五类场景组织（正常 / 边界 / 对抗 / 权限 / 故障），共 33 条用例，全部通过；另有 142 项自动化用例兜底。
 
 | 文件 | 内容 |
 | --- | --- |
@@ -344,7 +355,7 @@ expo-ticket-trace/
 │   ├── 2-项目基本简报/            # 客户简报 / 信息请求 / 问题库 / 分工（编号 1-6 的文档同名编号）
 │   ├── solution-v1/              # v1 交付：业务挖掘 / 行业分析 / 流程图 / 报价单 / 方案
 │   └── architecture-v2/          # v2 交付：展商咨询工单助手四层架构选型
-├── tests/                        # 134 项 unittest（16 项 Web 测试缺依赖时跳过）
+├── tests/                        # 142 项 unittest（25 项 Web 测试缺依赖时跳过）
 ├── examples/demo.py              # 跑得起来的分步演示
 ├── scripts/                      # build.sh / deploy.sh / verify.sh
 ├── config/default.yaml           # 非机密默认配置
@@ -408,7 +419,7 @@ expo-ticket-trace/
 ## 开发
 
 ```bash
-python -m unittest discover -s tests -t .    # 134 项；未装 Web 依赖时 16 项跳过
+python -m unittest discover -s tests -t .    # 142 项；未装 Web 依赖时 25 项跳过
 python -m compileall -q src
 python examples/demo.py                       # 分步演示（含确认、暂停、快照兜底）
 ```

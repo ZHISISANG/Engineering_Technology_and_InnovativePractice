@@ -87,6 +87,53 @@ class WebBase(unittest.TestCase):
                 events.append((event, data))
         return events
 
+    def test_staff_entry_login_and_logout(self) -> None:
+        client = self.client()
+        page = client.get("/login").text
+        self.assertIn("咨询员入口", page)
+        self.assertIn('action="/login"', page)
+        self.assertIn("/admin/login", page)          # 两个入口互链
+
+        # 角色隔离：审核方账号不能从咨询员入口登录
+        wrong = client.post("/login", data={"username": "admin", "password": PASSWORD},
+                            follow_redirects=False)
+        self.assertEqual(wrong.status_code, 401)
+        self.assertIn("后台入口", wrong.text)
+
+        resp = client.post("/login", data={"username": "agent", "password": PASSWORD},
+                           follow_redirects=False)
+        self.assertEqual(resp.status_code, 303)
+        self.assertEqual(resp.headers["location"], "/chat")
+
+        chat = client.get("/chat")
+        self.assertEqual(chat.status_code, 200)
+        self.assertIn('id="chat-shell"', chat.text)
+        self.assertIn("新建会话", chat.text)
+        self.assertIn("我的草稿", chat.text)
+        self.assertNotIn("/admin/kb", chat.text)      # 咨询员页面没有后台导航
+
+        out = client.post("/logout", follow_redirects=False)
+        self.assertEqual(out.status_code, 303)
+        self.assertEqual(out.headers["location"], "/login")
+        self.assertEqual(client.get("/chat", follow_redirects=False).status_code, 303)
+
+    def test_chat_sessions_and_drafts_pages(self) -> None:
+        client = self.client()
+        client.post("/login", data={"username": "agent", "password": PASSWORD},
+                    follow_redirects=False)
+        self.assertIn("我的会话", client.get("/chat").text)
+
+        created = client.post("/chat/new", follow_redirects=False)
+        self.assertEqual(created.status_code, 303)
+        sid = created.headers["location"].split("session=")[1]
+        page = client.get(f"/chat?session={sid}").text
+        self.assertIn(f'data-session="{sid}"', page)
+
+        drafts = client.get("/drafts")
+        self.assertEqual(drafts.status_code, 200)
+        self.assertIn("我的草稿", drafts.text)
+        self.assertIn("不可对外", drafts.text)
+
     def new_session(self, client, headers) -> str:
         return client.post("/api/v1/sessions", headers=headers).json()["session_id"]
 
@@ -183,21 +230,33 @@ class ChatTests(WebBase):
         self.assertEqual(done["answer_type"], "blocked")
         self.assertEqual(done["code"], "E_PILOT_PAUSED")
 
-    def test_chat_page_nav_only_for_reviewers(self) -> None:
-        """问答页给审核方/管理员显示后台导航；咨询员保持简洁；品牌是回问答页的链接。"""
+    def test_role_isolation_between_staff_and_admin(self) -> None:
+        """咨询员与审核方各进各的界面：staff 进不了后台，admin 进不了咨询员页面。"""
         staff = self.client()
-        staff.post("/admin/login", data={"username": "agent", "password": PASSWORD},
+        staff.post("/login", data={"username": "agent", "password": PASSWORD},
                    follow_redirects=False)
         page = staff.get("/chat").text
         self.assertIn('class="brand" href="/chat"', page)
-        self.assertNotIn("/admin/kb", page)
+        self.assertNotIn("/admin/kb", page)                # 咨询员页面无后台导航
+        self.assertEqual(staff.get("/admin", follow_redirects=False).status_code, 403)
+        self.assertEqual(staff.get("/drafts").status_code, 200)
 
         admin = self.client()
         admin.post("/admin/login", data={"username": "admin", "password": PASSWORD},
                    follow_redirects=False)
-        page = admin.get("/chat").text
-        self.assertIn("/admin/kb", page)
-        self.assertIn("/admin/audit", page)
+        self.assertIn("/admin/kb", admin.get("/admin").text)
+        for path in ("/chat", "/drafts"):
+            resp = admin.get(path, follow_redirects=False)
+            self.assertEqual(resp.status_code, 303, path)
+            self.assertEqual(resp.headers["location"], "/admin", path)
+
+        # 后台登录不接受咨询员账号
+        agent_at_admin = self.client()
+        bad = agent_at_admin.post("/admin/login",
+                                  data={"username": "agent", "password": PASSWORD},
+                                  follow_redirects=False)
+        self.assertEqual(bad.status_code, 401)
+        self.assertIn("咨询员入口", bad.text)
 
     def test_messages_persist_with_citations(self) -> None:
         client = self.client()

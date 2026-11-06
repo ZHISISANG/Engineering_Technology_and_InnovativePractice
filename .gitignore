@@ -54,3 +54,4 @@ examples/.demo-run/
 
 # 归档交付物需要随仓库分发（覆盖上面的 *.zip）
 !archive/**/*.zip
+!src/**/*.zip

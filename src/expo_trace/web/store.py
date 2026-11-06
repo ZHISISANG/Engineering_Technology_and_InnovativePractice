@@ -208,6 +208,24 @@ class Store:
             ).fetchall()
         return list(reversed(rows))
 
+    def sessions_for(self, user_id: str, limit: int = 20) -> list[sqlite3.Row]:
+        with self.conn() as db:
+            return db.execute(
+                "SELECT id,title,updated_at FROM sessions WHERE user_id=?"
+                " ORDER BY updated_at DESC LIMIT ?", (user_id, limit)).fetchall()
+
+    def messages_for(self, session_id: str, limit: int = 50) -> list[sqlite3.Row]:
+        with self.conn() as db:
+            return db.execute(
+                "SELECT role,content,answer_type,error_code,created_at FROM messages"
+                " WHERE session_id=? ORDER BY id LIMIT ?", (session_id, limit)).fetchall()
+
+    def drafts_for(self, actor: str, limit: int = 20) -> list[sqlite3.Row]:
+        with self.conn() as db:
+            return db.execute(
+                "SELECT id,ticket_id,version_id,status,created_at FROM drafts"
+                " WHERE created_by=? ORDER BY created_at DESC LIMIT ?", (actor, limit)).fetchall()
+
     def add_citation(self, message_id: str, **kw: Any) -> None:
         with self.conn() as db:
             db.execute(

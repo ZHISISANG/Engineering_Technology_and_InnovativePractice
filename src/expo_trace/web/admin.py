@@ -83,7 +83,10 @@ def login_submit(request: Request, username: str = Form(...), password: str = Fo
     row = store.authenticate(username, password)
     if not row:
         store.audit("login_failed", username, "auth", {"username": username})
-        return HTMLResponse(pages.login_page("账号或密码不正确"), status_code=401)
+        return HTMLResponse(pages.login_page("账号或密码不正确", kind="admin"), status_code=401)
+    if row["role"] == "staff":   # 角色隔离：咨询员走 /login
+        return HTMLResponse(pages.login_page("该账号是咨询员，请使用咨询员入口登录", kind="admin"),
+                            status_code=401)
     jti = __import__("uuid").uuid4().hex
     token = sign({"sub": row["id"], "role": row["role"], "jti": jti},
                  request.app.state.settings.secret)

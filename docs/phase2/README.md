@@ -167,4 +167,4 @@ flowchart TB
 | P3 审计 | `src/expo_trace/web/store.py`（`audit` / `verify_audit`） | 已实现：哈希链、对话审计、标记与导出 |
 | P4 工具层 | `src/expo_trace/web/tools.py` | 已实现：10 个工具、调用顺序、一次性 `context_token` |
 
-验证：`tests/test_web.py` 17 项 + `tests/test_web_settings.py` 5 项 + 其余 112 项，共 134 项 unittest 全通过（Web 依赖缺失时 Web 组跳过）。
+验证：`tests/test_web.py` 20 项界面与 Web 用例 + `tests/test_web_settings.py` 5 项 + 其余 117 项，共 142 项 unittest 全通过（Web 依赖缺失时 Web 组跳过）。
