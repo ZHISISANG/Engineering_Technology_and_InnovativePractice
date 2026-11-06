@@ -25,6 +25,7 @@
 - `src/expo_trace/rag_qa.py`：模块说明、`SYSTEM_PROMPT`、argparse 描述、`--policy` 默认路径、拒答话术与注释改为展商咨询口径。
 - `README.md`、`docs/rag-prototype.md`、`docs/architecture-v2/README.md`、本文件的历史条目统一去掉"报销助手"表述。
 - 删除仓库根目录的历史打包文件 `报销助手_f24011321.zip`（约 11MB），`.gitignore` 增 `*.zip`。
+- `docs/architecture-v2/01-架构选型方案.docx` 与 `02-图表/四层架构图.png` 按展商咨询口径重做：正文改为「展商咨询工单助手」（工具白名单换成 `get_ticket / resolve_version / check_fields / compose_draft / request_human_review / get_pilot_status`，表结构改为 `policy_documents / reply_drafts / draft_citations`，验收与演示脚本改住宿代订与收费边界场景），架构图重绘并替换文档内嵌图。
 
 
 ### 新增（阶段 2 设计，仅文档）
